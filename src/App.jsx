@@ -136,7 +136,7 @@ function App() {
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsVienna.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
             {itemsVienna.map((item, idx) => (
-              <li key={idx} style={{ margin: '0 auto 2rem auto', background: '#f1f5f9', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '95%', width: '95%', overflowX: 'auto' }}>
+              <li key={idx} style={{ margin: '0 auto 2rem auto', background: '#f1f5f9', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '600px', width: '100%', minWidth: '0', overflowX: 'hidden', boxSizing: 'border-box' }}>
                 {editIndex === idx && editSite === 'vienna' ? (
                   <>
                     <input
