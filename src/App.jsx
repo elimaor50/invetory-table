@@ -102,7 +102,7 @@ function App() {
       {(!isMobile || activeTab === 'add') && (
         <div style={{ flex: 1, minWidth: '350px', padding: '3rem 2rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '0 2rem 2rem 0', height: isMobile ? 'auto' : '100vh', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem', color: '#2d3748' }}>Add Item</h2>
-          <div className="add-item" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '400px', minWidth: '0', background: '#f1f5f9', padding: '2rem', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', margin: '0 auto', boxSizing: 'border-box', alignItems: 'stretch' }}>
+          <div className="add-item" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '400px', minWidth: '0', background: '#f1f5f9', padding: '2rem', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', margin: '2rem auto', boxSizing: 'border-box', alignItems: 'stretch', justifyContent: 'center' }}>
             <select value={site} onChange={e => setSite(e.target.value)} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}>
               <option value="vienna">Vienna</option>
               <option value="innsbruck">Innsbruck</option>
