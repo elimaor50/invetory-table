@@ -66,7 +66,7 @@ function App() {
   const [editType, setEditType] = useState('refill');
   const [editLowStockThreshold, setEditLowStockThreshold] = useState('10');
   const [editSite, setEditSite] = useState('office');
-  const [activeTab, setActiveTab] = useState('add');
+  const [activeTab, setActiveTab] = useState('office');
   const LOW_STOCK = 10;
 
   // Helper function to scroll active tab into view on mobile
@@ -185,7 +185,7 @@ function App() {
           scroll-behavior: smooth;
         }
       `}</style>
-      <div className="inventory-app" style={{ display: isMobile ? 'block' : 'grid', gridTemplateColumns: isMobile ? '1fr' : 'auto 1fr 1fr 1fr 1fr 1fr 1fr', gap: isMobile ? '0' : '1rem', height: '100dvh', width: '100vw', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', overflow: 'auto', margin: 0, padding: isMobile ? '0' : '1rem' }}>
+      <div className="inventory-app" style={{ display: isMobile ? 'block' : 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr 1fr 1fr auto', gap: isMobile ? '0' : '1rem', height: '100dvh', width: '100vw', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', overflow: 'auto', margin: 0, padding: isMobile ? '0' : '1rem' }}>
       {/* Mobile tab menu */}
       {isMobile && (
         <div className="mobile-nav" style={{ 
@@ -207,22 +207,6 @@ function App() {
           boxSizing: 'border-box'
         }}>
           <button 
-            data-tab="add"
-            onClick={() => scrollToActiveTab('add')} 
-            style={{ 
-              fontWeight: activeTab === 'add' ? 'bold' : 'normal', 
-              background: activeTab === 'add' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'add' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>Add Item</button>
-          <button 
             data-tab="office"
             onClick={() => scrollToActiveTab('office')} 
             style={{ 
@@ -237,23 +221,7 @@ function App() {
               minWidth: 'fit-content',
               whiteSpace: 'nowrap',
               flexShrink: 0
-            }}>Office</button>
-          <button 
-            data-tab="innsbruck"
-            onClick={() => scrollToActiveTab('innsbruck')} 
-            style={{ 
-              fontWeight: activeTab === 'innsbruck' ? 'bold' : 'normal', 
-              background: activeTab === 'innsbruck' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'innsbruck' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>Innsbruck</button>
+            }}>OFFICE</button>
           <button 
             data-tab="ci"
             onClick={() => scrollToActiveTab('ci')} 
@@ -318,11 +286,43 @@ function App() {
               whiteSpace: 'nowrap',
               flexShrink: 0
             }}>CELLER</button>
+          <button 
+            data-tab="innsbruck"
+            onClick={() => scrollToActiveTab('innsbruck')} 
+            style={{ 
+              fontWeight: activeTab === 'innsbruck' ? 'bold' : 'normal', 
+              background: activeTab === 'innsbruck' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'innsbruck' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>INNSBRUCK</button>
+          <button 
+            data-tab="add"
+            onClick={() => scrollToActiveTab('add')} 
+            style={{ 
+              fontWeight: activeTab === 'add' ? 'bold' : 'normal', 
+              background: activeTab === 'add' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'add' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>ADD ITEM</button>
         </div>
       )}
       {/* Add Item */}
       {(!isMobile || activeTab === 'add') && (
-        <div style={{ gridColumn: isMobile ? '1' : '1', flex: isMobile ? 'none' : 'unset', minWidth: '0', padding: '2rem 1.5rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '1rem', height: isMobile ? 'auto' : '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '7', flex: isMobile ? 'none' : 'unset', minWidth: '0', padding: '2rem 1.5rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '1rem', height: isMobile ? 'auto' : '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
           <h2 style={{ fontSize: '1.8rem', marginBottom: '1.5rem', color: '#2d3748' }}>Add Item</h2>
           <div className="add-item" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%', maxWidth: '300px', minWidth: '0', background: '#f1f5f9', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', margin: '1rem auto', boxSizing: 'border-box', alignItems: 'stretch', justifyContent: 'center' }}>
             <select value={site} onChange={e => setSite(e.target.value)} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}>
@@ -364,7 +364,7 @@ function App() {
       )}
       {/* Office Column */}
       {(!isMobile || activeTab === 'office') && (
-        <div style={{ gridColumn: isMobile ? '1' : '2', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '1', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>Office</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsOffice.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -517,7 +517,7 @@ function App() {
       )}
       {/* Innsbruck Column */}
       {(!isMobile || activeTab === 'innsbruck') && (
-        <div style={{ gridColumn: isMobile ? '1' : '3', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '6', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>Innsbruck</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsInnsbruck.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -670,7 +670,7 @@ function App() {
       )}
       {/* C/I Column */}
       {(!isMobile || activeTab === 'ci') && (
-        <div style={{ gridColumn: isMobile ? '1' : '4', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '2', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>C/I</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsCI.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -805,7 +805,7 @@ function App() {
       )}
       {/* GATE Column */}
       {(!isMobile || activeTab === 'gate') && (
-        <div style={{ gridColumn: isMobile ? '1' : '5', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '3', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>GATE</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsGate.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -940,7 +940,7 @@ function App() {
       )}
       {/* CTX Column */}
       {(!isMobile || activeTab === 'ctx') && (
-        <div style={{ gridColumn: isMobile ? '1' : '6', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '4', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>CTX</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsCTX.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -1075,7 +1075,7 @@ function App() {
       )}
       {/* CELLER Column */}
       {(!isMobile || activeTab === 'celler') && (
-        <div style={{ gridColumn: isMobile ? '1' : '7', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '5', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>CELLER</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsCeller.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
