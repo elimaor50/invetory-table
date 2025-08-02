@@ -91,7 +91,7 @@ function App() {
   };
 
   return (
-    <div className="inventory-app" style={{ display: isMobile ? 'block' : 'flex', minHeight: '100vh', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', width: '100vw', maxWidth: '100vw', overflow: 'hidden', margin: 0, padding: 0, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div className="inventory-app" style={{ display: isMobile ? 'block' : 'flex', minHeight: '100vh', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', width: '100vw', maxWidth: '100vw', overflowY: 'auto', margin: 0, padding: 0 }}>
       {/* Mobile tab menu */}
       {isMobile && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', background: '#fff', boxShadow: '0 2px 8px #e0e7ef', padding: '1rem 0', position: 'sticky', top: 0, zIndex: 10 }}>
@@ -133,7 +133,7 @@ function App() {
       )}
       {/* Vienna Column */}
       {(!isMobile || activeTab === 'vienna') && (
-        <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '2rem', minWidth: isMobile ? '0' : '400px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '2rem', minWidth: isMobile ? '0' : '400px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0', maxHeight: isMobile ? 'none' : 'calc(100vh - 4rem)' }}>
           <h2 style={{ fontSize: '1.7rem', marginBottom: '1.5rem', color: '#2563eb' }}>Vienna</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsVienna.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -192,7 +192,7 @@ function App() {
       )}
       {/* Innsbruck Column */}
       {(!isMobile || activeTab === 'innsbruck') && (
-        <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '2rem', minWidth: isMobile ? '0' : '400px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '2rem', minWidth: isMobile ? '0' : '400px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0', maxHeight: isMobile ? 'none' : 'calc(100vh - 4rem)' }}>
           <h2 style={{ fontSize: '1.7rem', marginBottom: '1.5rem', color: '#2563eb' }}>Innsbruck</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsInnsbruck.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
