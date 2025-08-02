@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { db } from './firebase';
 import {
@@ -14,12 +14,16 @@ import {
 function App() {
   // Helper to check if string contains Hebrew
   const isHebrew = str => /[\u0590-\u05FF]/.test(str);
-  // Helper to get font size for item name
+  // Helper to get font size for item name with more granular scaling
   const getNameFontSize = name => {
     if (!name) return '1.3rem';
-    if (name.length > 30) return '0.9rem';
-    if (name.length > 20) return '1.1rem';
-    return '1.3rem';
+    const length = name.length;
+    if (length > 45) return '0.75rem';  // Very long names
+    if (length > 35) return '0.85rem';  // Long names
+    if (length > 25) return '0.95rem';  // Medium-long names
+    if (length > 18) return '1.1rem';   // Medium names
+    if (length > 12) return '1.2rem';   // Short-medium names
+    return '1.3rem';                    // Short names
   };
   const [itemsVienna, setItemsVienna] = useState([]);
   const [itemsInnsbruck, setItemsInnsbruck] = useState([]);
@@ -198,7 +202,7 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
+                    <React.Fragment>
                       {item.type === 'refill' && item.amount < LOW_STOCK && (
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '0.3rem' }}>
                           <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.2rem', background: 'none' }}>⚠️ Low stock!</span>
@@ -211,13 +215,19 @@ function App() {
                             fontSize: getNameFontSize(item.name),
                             color: '#334155',
                             wordBreak: 'break-word',
-                            maxWidth: isHebrew(item.name) ? '75%' : '60%',
-                            whiteSpace: 'nowrap',
+                            maxWidth: isHebrew(item.name) ? '75%' : '65%',
+                            whiteSpace: item.name.length > 25 ? 'normal' : 'nowrap',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis',
+                            textOverflow: item.name.length > 25 ? 'clip' : 'ellipsis',
                             direction: isHebrew(item.name) ? 'rtl' : 'ltr',
                             textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            lineHeight: item.name.length > 25 ? '1.2' : '1.4',
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: item.name.length > 35 ? 3 : 2,
+                            maxHeight: item.name.length > 35 ? '2.8rem' : '2.4rem',
                           }}
+                          title={item.name} // Add tooltip for full name
                         >
                           {item.name}
                         </span>
@@ -230,7 +240,7 @@ function App() {
                         <button onClick={() => handleEdit(originalIdx, 'vienna')} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Edit</button>
                         <button onClick={() => handleDelete(originalIdx, 'vienna')} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Delete</button>
                       </div>
-                    </>
+                    </React.Fragment>
                   )}
                 </li>
               ))}
@@ -308,13 +318,19 @@ function App() {
                             fontSize: getNameFontSize(item.name),
                             color: '#334155',
                             wordBreak: 'break-word',
-                            maxWidth: isHebrew(item.name) ? '75%' : '60%',
-                            whiteSpace: 'nowrap',
+                            maxWidth: isHebrew(item.name) ? '75%' : '65%',
+                            whiteSpace: item.name.length > 25 ? 'normal' : 'nowrap',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis',
+                            textOverflow: item.name.length > 25 ? 'clip' : 'ellipsis',
                             direction: isHebrew(item.name) ? 'rtl' : 'ltr',
                             textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            lineHeight: item.name.length > 25 ? '1.2' : '1.4',
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: item.name.length > 35 ? 3 : 2,
+                            maxHeight: item.name.length > 35 ? '2.8rem' : '2.4rem',
                           }}
+                          title={item.name} // Add tooltip for full name
                         >
                           {item.name}
                         </span>
