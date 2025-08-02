@@ -136,39 +136,45 @@ function App() {
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsVienna.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
             {itemsVienna.map((item, idx) => (
-              <li key={idx} style={{ margin: '0 auto 2rem auto', background: '#f1f5f9', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '600px', width: '100%', minWidth: '0', overflowX: 'hidden', boxSizing: 'border-box' }}>
+              <li key={idx} style={{ margin: '0 auto 2rem auto', background: '#f1f5f9', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.2rem', maxWidth: '600px', width: '100%', minWidth: '0', overflowX: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
                 {editIndex === idx && editSite === 'vienna' ? (
                   <>
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', minWidth: '120px' }}
-                    />
-                    <input
-                      type="number"
-                      value={editAmount}
-                      onChange={e => setEditAmount(e.target.value)}
-                      style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', minWidth: '80px' }}
-                    />
-                    <select value={editType} onChange={e => setEditType(e.target.value)} style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', minWidth: '120px' }}>
-                      <option value="refill">Require Refill</option>
-                      <option value="stable">Stable</option>
-                    </select>
-                    <button onClick={handleSave} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '80px' }}>Save</button>
-                    <button onClick={() => setEditIndex(null)} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '80px' }}>Cancel</button>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', minWidth: '80px', flex: 1 }}
+                      />
+                      <input
+                        type="number"
+                        value={editAmount}
+                        onChange={e => setEditAmount(e.target.value)}
+                        style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', minWidth: '60px', flex: 1 }}
+                      />
+                      <select value={editType} onChange={e => setEditType(e.target.value)} style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', minWidth: '80px', flex: 1 }}>
+                        <option value="refill">Require Refill</option>
+                        <option value="stable">Stable</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', justifyContent: 'flex-end' }}>
+                      <button onClick={handleSave} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '80px' }}>Save</button>
+                      <button onClick={() => setEditIndex(null)} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '80px' }}>Cancel</button>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <span style={{ fontWeight: 'bold', fontSize: '1.3rem', color: '#334155', minWidth: '120px' }}>{item.name}</span>
-                    <span style={{ fontSize: '1.2rem', color: '#64748b', minWidth: '80px' }}>Amount: {item.amount}</span>
-                    <span style={{ fontSize: '1.1rem', color: item.type === 'refill' && item.amount < LOW_STOCK ? '#ef4444' : '#22c55e', fontWeight: 'bold', minWidth: '120px' }}>
-                      {item.type === 'refill' ? 'Require Refill' : 'Stable'}
-                    </span>
-                    {item.type === 'refill' && item.amount < LOW_STOCK && (
-                      <span className="alert" style={{ color: '#ef4444', marginLeft: '0.5rem', fontWeight: 'bold', fontSize: '1.2rem', minWidth: '120px' }}>⚠️ Low stock!</span>
-                    )}
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '1.3rem', color: '#334155', minWidth: '80px', flex: 1 }}>{item.name}</span>
+                      <span style={{ fontSize: '1.2rem', color: '#64748b', minWidth: '60px', flex: 1 }}>Amount: {item.amount}</span>
+                      <span style={{ fontSize: '1.1rem', color: item.type === 'refill' && item.amount < LOW_STOCK ? '#ef4444' : '#22c55e', fontWeight: 'bold', minWidth: '80px', flex: 1 }}>
+                        {item.type === 'refill' ? 'Require Refill' : 'Stable'}
+                      </span>
+                      {item.type === 'refill' && item.amount < LOW_STOCK && (
+                        <span className="alert" style={{ color: '#ef4444', marginLeft: '0.5rem', fontWeight: 'bold', fontSize: '1.2rem', minWidth: '80px', flex: 1 }}>⚠️ Low stock!</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', justifyContent: 'flex-end' }}>
                       <button onClick={() => handleEdit(idx, 'vienna')} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '80px' }}>Edit</button>
                       <button onClick={() => handleDelete(idx, 'vienna')} style={{ fontSize: '1.1rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', minWidth: '80px' }}>Delete</button>
                     </div>
