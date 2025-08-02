@@ -69,6 +69,19 @@ function App() {
   const [activeTab, setActiveTab] = useState('add');
   const LOW_STOCK = 10;
 
+  // Helper function to scroll active tab into view on mobile
+  const scrollToActiveTab = (tabName) => {
+    setActiveTab(tabName);
+    if (isMobile) {
+      setTimeout(() => {
+        const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+        if (activeButton) {
+          activeButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      }, 100);
+    }
+  };
+
   // Firestore real-time sync
   useEffect(() => {
     const q = query(collection(db, 'inventory'));
@@ -157,17 +170,154 @@ function App() {
   };
 
   return (
-    <div className="inventory-app" style={{ display: isMobile ? 'block' : 'grid', gridTemplateColumns: isMobile ? '1fr' : 'auto 1fr 1fr 1fr 1fr 1fr 1fr', gap: isMobile ? '0' : '1rem', height: '100dvh', width: '100vw', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', overflow: 'auto', margin: 0, padding: isMobile ? '0' : '1rem' }}>
+    <>
+      <style jsx>{`
+        /* Custom scrollbar for mobile navigation */
+        .mobile-nav {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+        }
+        .mobile-nav::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
+        }
+        /* Smooth scrolling for mobile */
+        .mobile-nav {
+          scroll-behavior: smooth;
+        }
+      `}</style>
+      <div className="inventory-app" style={{ display: isMobile ? 'block' : 'grid', gridTemplateColumns: isMobile ? '1fr' : 'auto 1fr 1fr 1fr 1fr 1fr 1fr', gap: isMobile ? '0' : '1rem', height: '100dvh', width: '100vw', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', overflow: 'auto', margin: 0, padding: isMobile ? '0' : '1rem' }}>
       {/* Mobile tab menu */}
       {isMobile && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', background: '#fff', boxShadow: '0 2px 8px #e0e7ef', padding: '1rem 0', position: 'sticky', top: 0, zIndex: 10, overflowX: 'auto', whiteSpace: 'nowrap' }}>
-          <button onClick={() => setActiveTab('add')} style={{ fontWeight: activeTab === 'add' ? 'bold' : 'normal', background: activeTab === 'add' ? '#2563eb' : '#f1f5f9', color: activeTab === 'add' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>Add</button>
-          <button onClick={() => setActiveTab('office')} style={{ fontWeight: activeTab === 'office' ? 'bold' : 'normal', background: activeTab === 'office' ? '#2563eb' : '#f1f5f9', color: activeTab === 'office' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>Office</button>
-          <button onClick={() => setActiveTab('innsbruck')} style={{ fontWeight: activeTab === 'innsbruck' ? 'bold' : 'normal', background: activeTab === 'innsbruck' ? '#2563eb' : '#f1f5f9', color: activeTab === 'innsbruck' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>Innsbruck</button>
-          <button onClick={() => setActiveTab('ci')} style={{ fontWeight: activeTab === 'ci' ? 'bold' : 'normal', background: activeTab === 'ci' ? '#2563eb' : '#f1f5f9', color: activeTab === 'ci' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>C/I</button>
-          <button onClick={() => setActiveTab('gate')} style={{ fontWeight: activeTab === 'gate' ? 'bold' : 'normal', background: activeTab === 'gate' ? '#2563eb' : '#f1f5f9', color: activeTab === 'gate' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>GATE</button>
-          <button onClick={() => setActiveTab('ctx')} style={{ fontWeight: activeTab === 'ctx' ? 'bold' : 'normal', background: activeTab === 'ctx' ? '#2563eb' : '#f1f5f9', color: activeTab === 'ctx' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>CTX</button>
-          <button onClick={() => setActiveTab('celler')} style={{ fontWeight: activeTab === 'celler' ? 'bold' : 'normal', background: activeTab === 'celler' ? '#2563eb' : '#f1f5f9', color: activeTab === 'celler' ? '#fff' : '#2563eb', border: 'none', borderRadius: '0.5rem', padding: '0.7rem 1rem', fontSize: '1rem', cursor: 'pointer', minWidth: 'fit-content' }}>CELLER</button>
+        <div className="mobile-nav" style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-start', 
+          gap: '0.5rem', 
+          background: '#fff', 
+          boxShadow: '0 2px 8px #e0e7ef', 
+          padding: '1rem', 
+          position: 'sticky', 
+          top: 0, 
+          zIndex: 10, 
+          overflowX: 'auto', 
+          overflowY: 'hidden',
+          whiteSpace: 'nowrap',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'thin',
+          width: '100vw',
+          boxSizing: 'border-box'
+        }}>
+          <button 
+            data-tab="add"
+            onClick={() => scrollToActiveTab('add')} 
+            style={{ 
+              fontWeight: activeTab === 'add' ? 'bold' : 'normal', 
+              background: activeTab === 'add' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'add' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>Add Item</button>
+          <button 
+            data-tab="office"
+            onClick={() => scrollToActiveTab('office')} 
+            style={{ 
+              fontWeight: activeTab === 'office' ? 'bold' : 'normal', 
+              background: activeTab === 'office' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'office' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>Office</button>
+          <button 
+            data-tab="innsbruck"
+            onClick={() => scrollToActiveTab('innsbruck')} 
+            style={{ 
+              fontWeight: activeTab === 'innsbruck' ? 'bold' : 'normal', 
+              background: activeTab === 'innsbruck' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'innsbruck' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>Innsbruck</button>
+          <button 
+            data-tab="ci"
+            onClick={() => scrollToActiveTab('ci')} 
+            style={{ 
+              fontWeight: activeTab === 'ci' ? 'bold' : 'normal', 
+              background: activeTab === 'ci' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'ci' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>C/I</button>
+          <button 
+            data-tab="gate"
+            onClick={() => scrollToActiveTab('gate')} 
+            style={{ 
+              fontWeight: activeTab === 'gate' ? 'bold' : 'normal', 
+              background: activeTab === 'gate' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'gate' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>GATE</button>
+          <button 
+            data-tab="ctx"
+            onClick={() => scrollToActiveTab('ctx')} 
+            style={{ 
+              fontWeight: activeTab === 'ctx' ? 'bold' : 'normal', 
+              background: activeTab === 'ctx' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'ctx' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>CTX</button>
+          <button 
+            data-tab="celler"
+            onClick={() => scrollToActiveTab('celler')} 
+            style={{ 
+              fontWeight: activeTab === 'celler' ? 'bold' : 'normal', 
+              background: activeTab === 'celler' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'celler' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>CELLER</button>
         </div>
       )}
       {/* Add Item */}
@@ -1058,7 +1208,8 @@ function App() {
           </ul>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
