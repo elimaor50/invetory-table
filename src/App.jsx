@@ -318,7 +318,7 @@ function App() {
                       {/* Second row: Type, Low Stock Alert, and Action buttons */}
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1.1rem', color: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e', fontWeight: 'bold' }}>
+                          <span style={{ fontSize: '1.1rem', color: item.type === 'refill' ? (item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
                             {item.type === 'refill' ? 'Supplies' : 'Equipment'}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
@@ -421,7 +421,7 @@ function App() {
                         {/* Status and buttons */}
                         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                            <span style={{ fontSize: '1rem', color: editType === 'refill' && editAmount < editLowStockThreshold ? '#ef4444' : '#22c55e', fontWeight: 'bold' }}>
+                            <span style={{ fontSize: '1rem', color: editType === 'refill' ? (editAmount < editLowStockThreshold ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
                               {editType === 'refill' ? 'Supplies' : 'Equipment'}
                             </span>
                             {editType === 'refill' && editAmount < editLowStockThreshold && (
@@ -471,7 +471,7 @@ function App() {
                       {/* Second row: Type, Low Stock Alert, and Action buttons */}
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1.1rem', color: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e', fontWeight: 'bold' }}>
+                          <span style={{ fontSize: '1.1rem', color: item.type === 'refill' ? (item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
                             {item.type === 'refill' ? 'Supplies' : 'Equipment'}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
