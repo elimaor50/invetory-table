@@ -91,7 +91,7 @@ function App() {
   };
 
   return (
-    <div className="inventory-app" style={{ display: isMobile ? 'block' : 'flex', height: '100vh', width: '100vw', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', overflow: 'auto', margin: 0, padding: 0, position: 'fixed', top: 0, left: 0 }}>
+    <div className="inventory-app" style={{ display: isMobile ? 'block' : 'flex', height: '100dvh', width: '100vw', fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.3rem', background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', boxSizing: 'border-box', overflow: 'auto', margin: 0, padding: 0 }}>
       {/* Mobile tab menu */}
       {isMobile && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', background: '#fff', boxShadow: '0 2px 8px #e0e7ef', padding: '1rem 0', position: 'sticky', top: 0, zIndex: 10 }}>
