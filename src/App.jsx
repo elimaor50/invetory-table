@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { db } from './firebase';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query
+} from 'firebase/firestore';
 
 function App() {
-  const [itemsVienna, setItemsVienna] = useState(() => {
-    const saved = localStorage.getItem('itemsVienna');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [itemsInnsbruck, setItemsInnsbruck] = useState(() => {
-    const saved = localStorage.getItem('itemsInnsbruck');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [itemsVienna, setItemsVienna] = useState([]);
+  const [itemsInnsbruck, setItemsInnsbruck] = useState([]);
   const [site, setSite] = useState('vienna');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -25,34 +29,33 @@ function App() {
   // Detect mobile
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 900;
 
-  // Save to localStorage whenever items change
+  // Firestore real-time sync
   useEffect(() => {
-    localStorage.setItem('itemsVienna', JSON.stringify(itemsVienna));
-  }, [itemsVienna]);
-  useEffect(() => {
-    localStorage.setItem('itemsInnsbruck', JSON.stringify(itemsInnsbruck));
-  }, [itemsInnsbruck]);
+    const q = query(collection(db, 'inventory'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allItems = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setItemsVienna(allItems.filter(item => item.site === 'vienna'));
+      setItemsInnsbruck(allItems.filter(item => item.site === 'innsbruck'));
+    });
+    return unsubscribe;
+  }, []);
 
-  // Add item to selected site
-  const handleAdd = () => {
+  // Add item to Firestore
+  const handleAdd = async () => {
     if (!name || !amount || isNaN(amount)) return;
-    const newItem = { name, amount: Number(amount), type };
-    if (site === 'vienna') {
-      setItemsVienna(prev => [...prev, newItem]);
-    } else {
-      setItemsInnsbruck(prev => [...prev, newItem]);
-    }
+    const newItem = { name, amount: Number(amount), type, site };
+    await addDoc(collection(db, 'inventory'), newItem);
     setName('');
     setAmount('');
     setType('refill');
   };
 
-  // Delete item from correct site
-  const handleDelete = (idx, whichSite) => {
-    if (whichSite === 'vienna') {
-      setItemsVienna(itemsVienna.filter((_, i) => i !== idx));
-    } else {
-      setItemsInnsbruck(itemsInnsbruck.filter((_, i) => i !== idx));
+  // Delete item from Firestore
+  const handleDelete = async (idx, whichSite) => {
+    const items = whichSite === 'vienna' ? itemsVienna : itemsInnsbruck;
+    const item = items.find((_, i) => i === idx);
+    if (item && item.id) {
+      await deleteDoc(doc(db, 'inventory', item.id));
     }
   };
 
@@ -60,26 +63,25 @@ function App() {
   const handleEdit = (idx, whichSite) => {
     setEditIndex(idx);
     setEditSite(whichSite);
-    const item = whichSite === 'vienna' ? itemsVienna[idx] : itemsInnsbruck[idx];
+    const items = whichSite === 'vienna' ? itemsVienna : itemsInnsbruck;
+    const item = items.find((_, i) => i === idx);
     setEditName(item.name);
     setEditAmount(item.amount);
     setEditType(item.type);
   };
 
-  // Save edited item
-  const handleSave = () => {
+  // Save edited item to Firestore
+  const handleSave = async () => {
     if (!editName || !editAmount || isNaN(editAmount)) return;
-    const updatedItem = { name: editName, amount: Number(editAmount), type: editType };
-    if (editSite === 'vienna') {
-      const updated = itemsVienna.map((item, i) =>
-        i === editIndex ? updatedItem : item
-      );
-      setItemsVienna(updated);
-    } else {
-      const updated = itemsInnsbruck.map((item, i) =>
-        i === editIndex ? updatedItem : item
-      );
-      setItemsInnsbruck(updated);
+    const items = editSite === 'vienna' ? itemsVienna : itemsInnsbruck;
+    const item = items.find((_, i) => i === editIndex);
+    if (item && item.id) {
+      await updateDoc(doc(db, 'inventory', item.id), {
+        name: editName,
+        amount: Number(editAmount),
+        type: editType,
+        site: editSite
+      });
     }
     setEditIndex(null);
     setEditName('');
