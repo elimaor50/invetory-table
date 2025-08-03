@@ -96,6 +96,29 @@ function App() {
   const [activeTab, setActiveTab] = useState('office');
   const LOW_STOCK = 10;
 
+  // Delete confirmation dialog state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState({ idx: null, site: null, itemName: '' });
+
+  // Function to show delete confirmation
+  const confirmDelete = (idx, whichSite) => {
+    const items = whichSite === 'office' ? itemsOffice : 
+                  whichSite === 'innsbruck' ? itemsInnsbruck :
+                  whichSite === 'ci' ? itemsCI :
+                  whichSite === 'gate' ? itemsGate :
+                  whichSite === 'ctx' ? itemsCTX : itemsCeller;
+    
+    const item = items[idx];
+    setDeleteTarget({ idx, site: whichSite, itemName: item?.name || 'Unknown Item' });
+    setShowDeleteConfirm(true);
+  };
+
+  // Function to cancel delete
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setDeleteTarget({ idx: null, site: null, itemName: '' });
+  };
+
   // Helper function to scroll active tab into view on mobile
   const scrollToActiveTab = (tabName) => {
     setActiveTab(tabName);
@@ -141,17 +164,22 @@ function App() {
     setLowStockThreshold('10');
   };
 
-  // Delete item from Firestore
-  const handleDelete = async (idx, whichSite) => {
-    const items = whichSite === 'office' ? itemsOffice : 
-                  whichSite === 'innsbruck' ? itemsInnsbruck :
-                  whichSite === 'ci' ? itemsCI :
-                  whichSite === 'gate' ? itemsGate :
-                  whichSite === 'ctx' ? itemsCTX : itemsCeller;
-    const item = items.find((_, i) => i === idx);
-    if (item && item.id) {
-      await deleteDoc(doc(db, 'inventory', item.id));
+  // Delete item from Firestore (called after confirmation)
+  const handleDelete = async () => {
+    if (deleteTarget.idx !== null && deleteTarget.site) {
+      const items = deleteTarget.site === 'office' ? itemsOffice : 
+                    deleteTarget.site === 'innsbruck' ? itemsInnsbruck :
+                    deleteTarget.site === 'ci' ? itemsCI :
+                    deleteTarget.site === 'gate' ? itemsGate :
+                    deleteTarget.site === 'ctx' ? itemsCTX : itemsCeller;
+      const item = items.find((_, i) => i === deleteTarget.idx);
+      if (item && item.id) {
+        await deleteDoc(doc(db, 'inventory', item.id));
+      }
     }
+    // Close confirmation dialog
+    setShowDeleteConfirm(false);
+    setDeleteTarget({ idx: null, site: null, itemName: '' });
   };
 
   // Edit item from correct site
@@ -561,7 +589,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'office')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => handleDelete(originalIdx, 'office')} style={getButtonStyle('#ef4444')}>Delete</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'office')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </React.Fragment>
@@ -714,7 +742,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'innsbruck')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => handleDelete(originalIdx, 'innsbruck')} style={getButtonStyle('#ef4444')}>Delete</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'innsbruck')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </>
@@ -849,7 +877,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'ci')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => handleDelete(originalIdx, 'ci')} style={getButtonStyle('#ef4444')}>Delete</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'ci')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </>
@@ -984,7 +1012,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'gate')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => handleDelete(originalIdx, 'gate')} style={getButtonStyle('#ef4444')}>Delete</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'gate')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </>
@@ -1119,7 +1147,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'ctx')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => handleDelete(originalIdx, 'ctx')} style={getButtonStyle('#ef4444')}>Delete</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'ctx')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </>
@@ -1254,7 +1282,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'celler')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => handleDelete(originalIdx, 'celler')} style={getButtonStyle('#ef4444')}>Delete</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'celler')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </>
@@ -1265,6 +1293,101 @@ function App() {
         </div>
       )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '100%',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              marginBottom: '1rem',
+              color: '#ef4444'
+            }}>
+              ⚠️
+            </div>
+            <h2 style={{
+              fontSize: '1.5rem',
+              marginBottom: '0.5rem',
+              color: '#1f2937',
+              fontWeight: 'bold'
+            }}>
+              Confirm Delete
+            </h2>
+            <p style={{
+              fontSize: '1.1rem',
+              marginBottom: '1.5rem',
+              color: '#6b7280',
+              lineHeight: '1.5'
+            }}>
+              Are you sure you want to delete{' '}
+              <strong style={{ color: '#1f2937' }}>"{deleteTarget.itemName}"</strong>?
+              <br />
+              <span style={{ fontSize: '1rem', color: '#ef4444' }}>
+                This action cannot be undone.
+              </span>
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={cancelDelete}
+                style={{
+                  fontSize: '1.1rem',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  background: '#6b7280',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  minWidth: '100px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                style={{
+                  fontSize: '1.1rem',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  minWidth: '100px'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
