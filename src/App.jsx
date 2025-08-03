@@ -100,6 +100,14 @@ function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState({ idx: null, site: null, itemName: '' });
 
+  // Password protection state for adding items
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authTimeout, setAuthTimeout] = useState(null);
+  const CORRECT_PASSWORD = '2006';
+  const AUTH_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
   // Function to show delete confirmation
   const confirmDelete = (idx, whichSite) => {
     const items = whichSite === 'office' ? itemsOffice : 
@@ -118,6 +126,53 @@ function App() {
     setShowDeleteConfirm(false);
     setDeleteTarget({ idx: null, site: null, itemName: '' });
   };
+
+  // Password authentication functions
+  const checkPassword = () => {
+    if (passwordInput === CORRECT_PASSWORD) {
+      setIsAuthenticated(true);
+      setShowPasswordPrompt(false);
+      setPasswordInput('');
+      
+      // Clear any existing timeout
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+      }
+      
+      // Set new timeout for 10 minutes
+      const timeout = setTimeout(() => {
+        setIsAuthenticated(false);
+        setAuthTimeout(null);
+      }, AUTH_DURATION);
+      
+      setAuthTimeout(timeout);
+    } else {
+      alert('Incorrect password. Please try again.');
+      setPasswordInput('');
+    }
+  };
+
+  const cancelPasswordPrompt = () => {
+    setShowPasswordPrompt(false);
+    setPasswordInput('');
+  };
+
+  const attemptAddItem = () => {
+    if (isAuthenticated) {
+      handleAdd();
+    } else {
+      setShowPasswordPrompt(true);
+    }
+  };
+
+  // Clear timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+      }
+    };
+  }, [authTimeout]);
 
   // Helper function to scroll active tab into view on mobile
   const scrollToActiveTab = (tabName) => {
@@ -392,7 +447,23 @@ function App() {
       {/* Add Item */}
       {(!isMobile || activeTab === 'add') && (
         <div style={{ gridColumn: isMobile ? '1' : '7', flex: isMobile ? 'none' : 'unset', minWidth: '0', padding: '2rem 1.5rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '1rem', height: isMobile ? 'auto' : '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '1.5rem', color: '#2d3748' }}>Add Item</h2>
+          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#2d3748' }}>Add Item</h2>
+          {isAuthenticated && (
+            <div style={{
+              backgroundColor: '#22c55e',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              ✅ Authenticated - Adding items enabled
+            </div>
+          )}
           <div className="add-item" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%', maxWidth: '300px', minWidth: '0', background: '#f1f5f9', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', margin: '1rem auto', boxSizing: 'border-box', alignItems: 'stretch', justifyContent: 'center' }}>
             <select value={site} onChange={e => setSite(e.target.value)} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}>
               <option value="office">Office</option>
@@ -427,7 +498,7 @@ function App() {
               <option value="refill">Supplies</option>
               <option value="stable">Equipment</option>
             </select>
-            <button onClick={handleAdd} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>Add Item</button>
+            <button onClick={attemptAddItem} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>Add Item</button>
           </div>
         </div>
       )}
@@ -1383,6 +1454,101 @@ function App() {
                 }}
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Prompt Modal */}
+      {showPasswordPrompt && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+          }}>
+            <h3 style={{ 
+              margin: '0 0 1.5rem 0', 
+              fontSize: '1.5rem', 
+              color: '#2d3748',
+              textAlign: 'center'
+            }}>
+              🔒 Admin Access Required
+            </h3>
+            <p style={{ 
+              margin: '0 0 1.5rem 0', 
+              color: '#4a5568',
+              textAlign: 'center',
+              fontSize: '1rem'
+            }}>
+              Enter password to add new items:
+            </p>
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && checkPassword()}
+              placeholder="Enter password"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '2px solid #e2e8f0',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                marginBottom: '1.5rem',
+                boxSizing: 'border-box'
+              }}
+              autoFocus
+            />
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={cancelPasswordPrompt}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '0.5rem',
+                  backgroundColor: '#fff',
+                  color: '#4a5568',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={checkPassword}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  backgroundColor: '#2563eb',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Submit
               </button>
             </div>
           </div>
