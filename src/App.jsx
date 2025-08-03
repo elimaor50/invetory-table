@@ -288,6 +288,22 @@ function App() {
   return (
     <>
       <style jsx>{`
+        /* Global modern font family */
+        * {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Roboto", "Helvetica Neue", sans-serif;
+        }
+        
+        /* EliExpress branding animations */
+        @keyframes logoGlow {
+          0% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+          50% { text-shadow: 2px 2px 8px rgba(255,255,255,0.5), 0 0 20px rgba(255,101,0,0.5); }
+          100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        }
+        
+        .eli-logo {
+          animation: logoGlow 3s ease-in-out infinite;
+        }
+        
         /* Custom scrollbar for mobile navigation */
         .mobile-nav {
           scrollbar-width: none; /* Firefox */
@@ -307,7 +323,7 @@ function App() {
         gap: isMobile ? '0' : '1rem', 
         height: '100dvh', 
         width: '100vw', 
-        fontFamily: 'Segoe UI, Arial, sans-serif', 
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Roboto", "Helvetica Neue", sans-serif', 
         fontSize: isMobile ? '1.2rem' : '1.3rem', 
         background: 'linear-gradient(90deg, #f8fafc 0%, #e0e7ef 100%)', 
         boxSizing: 'border-box', 
@@ -316,6 +332,58 @@ function App() {
         padding: isMobile ? '0' : '1rem',
         minHeight: '100vh'
       }}>
+      
+      {/* EliExpress Header */}
+      <div style={{
+        gridColumn: isMobile ? '1' : '1 / -1',
+        background: 'linear-gradient(135deg, #ff6500, #ff8533)',
+        color: '#fff',
+        padding: isMobile ? '1rem' : '1.5rem 2rem',
+        marginBottom: isMobile ? '0' : '1rem',
+        borderRadius: isMobile ? '0' : '1rem',
+        boxShadow: '0 4px 20px rgba(255, 101, 0, 0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div className="eli-logo" style={{
+              fontSize: isMobile ? '1.5rem' : '2rem',
+              fontWeight: '900',
+              letterSpacing: '-0.02em',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              lineHeight: '1.1'
+            }}>
+              🚀 EliExpress
+            </div>
+            <div style={{
+              fontSize: isMobile ? '0.75rem' : '0.9rem',
+              fontWeight: '500',
+              opacity: 0.85,
+              fontStyle: 'italic',
+              marginTop: '0.2rem',
+              letterSpacing: '0.5px'
+            }}>
+              Inventory Management System
+            </div>
+          </div>
+        </div>
+        {!isMobile && (
+          <div style={{
+            fontSize: '1rem',
+            fontWeight: '500',
+            opacity: 0.8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>📦</span>
+            Smart Inventory Solutions
+          </div>
+        )}
+      </div>
+
       {/* Mobile tab menu */}
       {isMobile && (
         <div className="mobile-nav" style={{ 
