@@ -82,6 +82,7 @@ function App() {
   const [itemsGate, setItemsGate] = useState([]);
   const [itemsCTX, setItemsCTX] = useState([]);
   const [itemsCeller, setItemsCeller] = useState([]);
+  const [itemsCheckRoom, setItemsCheckRoom] = useState([]);
   const [site, setSite] = useState('office');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -114,7 +115,8 @@ function App() {
                   whichSite === 'innsbruck' ? itemsInnsbruck :
                   whichSite === 'ci' ? itemsCI :
                   whichSite === 'gate' ? itemsGate :
-                  whichSite === 'ctx' ? itemsCTX : itemsCeller;
+                  whichSite === 'ctx' ? itemsCTX : 
+                  whichSite === 'celler' ? itemsCeller : itemsCheckRoom;
     
     const item = items[idx];
     setDeleteTarget({ idx, site: whichSite, itemName: item?.name || 'Unknown Item' });
@@ -198,6 +200,7 @@ function App() {
       setItemsGate(allItems.filter(item => item.site === 'gate'));
       setItemsCTX(allItems.filter(item => item.site === 'ctx'));
       setItemsCeller(allItems.filter(item => item.site === 'celler'));
+      setItemsCheckRoom(allItems.filter(item => item.site === 'check-room'));
     });
     return unsubscribe;
   }, []);
@@ -226,7 +229,8 @@ function App() {
                     deleteTarget.site === 'innsbruck' ? itemsInnsbruck :
                     deleteTarget.site === 'ci' ? itemsCI :
                     deleteTarget.site === 'gate' ? itemsGate :
-                    deleteTarget.site === 'ctx' ? itemsCTX : itemsCeller;
+                    deleteTarget.site === 'ctx' ? itemsCTX : 
+                    deleteTarget.site === 'celler' ? itemsCeller : itemsCheckRoom;
       const item = items.find((_, i) => i === deleteTarget.idx);
       if (item && item.id) {
         await deleteDoc(doc(db, 'inventory', item.id));
@@ -245,7 +249,8 @@ function App() {
                   whichSite === 'innsbruck' ? itemsInnsbruck :
                   whichSite === 'ci' ? itemsCI :
                   whichSite === 'gate' ? itemsGate :
-                  whichSite === 'ctx' ? itemsCTX : itemsCeller;
+                  whichSite === 'ctx' ? itemsCTX : 
+                  whichSite === 'celler' ? itemsCeller : itemsCheckRoom;
     const item = items.find((_, i) => i === idx);
     setEditName(item.name);
     setEditAmount(item.amount);
@@ -260,7 +265,8 @@ function App() {
                   editSite === 'innsbruck' ? itemsInnsbruck :
                   editSite === 'ci' ? itemsCI :
                   editSite === 'gate' ? itemsGate :
-                  editSite === 'ctx' ? itemsCTX : itemsCeller;
+                  editSite === 'ctx' ? itemsCTX : 
+                  editSite === 'celler' ? itemsCeller : itemsCheckRoom;
     const item = items.find((_, i) => i === editIndex);
     if (item && item.id) {
       await updateDoc(doc(db, 'inventory', item.id), {
@@ -297,7 +303,7 @@ function App() {
       `}</style>
       <div className="inventory-app" style={{ 
         display: isMobile ? 'block' : 'grid', 
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr 1fr 1fr auto', 
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr 1fr 1fr 1fr auto', 
         gap: isMobile ? '0' : '1rem', 
         height: '100dvh', 
         width: '100vw', 
@@ -395,6 +401,22 @@ function App() {
               flexShrink: 0
             }}>CTX</button>
           <button 
+            data-tab="check-room"
+            onClick={() => scrollToActiveTab('check-room')} 
+            style={{ 
+              fontWeight: activeTab === 'check-room' ? 'bold' : 'normal', 
+              background: activeTab === 'check-room' ? '#2563eb' : '#f1f5f9', 
+              color: activeTab === 'check-room' ? '#fff' : '#2563eb', 
+              border: 'none', 
+              borderRadius: '0.5rem', 
+              padding: '0.8rem 1.2rem', 
+              fontSize: '1rem', 
+              cursor: 'pointer', 
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>CHECK-ROOM</button>
+          <button 
             data-tab="celler"
             onClick={() => scrollToActiveTab('celler')} 
             style={{ 
@@ -446,7 +468,7 @@ function App() {
       )}
       {/* Add Item */}
       {(!isMobile || activeTab === 'add') && (
-        <div style={{ gridColumn: isMobile ? '1' : '7', flex: isMobile ? 'none' : 'unset', minWidth: '0', padding: '2rem 1.5rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '1rem', height: isMobile ? 'auto' : '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '8', flex: isMobile ? 'none' : 'unset', minWidth: '0', padding: '2rem 1.5rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '1rem', height: isMobile ? 'auto' : '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
           <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#2d3748' }}>Add Item</h2>
           {isAuthenticated && (
             <div style={{
@@ -472,6 +494,7 @@ function App() {
               <option value="gate">GATE</option>
               <option value="ctx">CTX</option>
               <option value="celler">CELLER</option>
+              <option value="check-room">CHECK-ROOM</option>
             </select>
             <input
               type="text"
@@ -672,7 +695,7 @@ function App() {
       )}
       {/* Innsbruck Column */}
       {(!isMobile || activeTab === 'innsbruck') && (
-        <div style={{ gridColumn: isMobile ? '1' : '6', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '7', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>Innsbruck</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsInnsbruck.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -1230,7 +1253,7 @@ function App() {
       )}
       {/* CELLER Column */}
       {(!isMobile || activeTab === 'celler') && (
-        <div style={{ gridColumn: isMobile ? '1' : '5', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+        <div style={{ gridColumn: isMobile ? '1' : '6', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>CELLER</h2>
           <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
             {itemsCeller.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
@@ -1354,6 +1377,134 @@ function App() {
                         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                           <button onClick={() => handleEdit(originalIdx, 'celler')} style={getButtonStyle('#2563eb')}>Edit</button>
                           <button onClick={() => confirmDelete(originalIdx, 'celler')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Check-Room Column */}
+      {(!isMobile || activeTab === 'check-room') && (
+        <div style={{ gridColumn: isMobile ? '1' : '5', flex: isMobile ? 'none' : 'unset', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', padding: '1.5rem', minWidth: isMobile ? '0' : '250px', height: isMobile ? 'auto' : '100%', overflowY: 'auto', marginTop: isMobile ? '2rem' : '0' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb' }}>Check-Room</h2>
+          <ul className="item-list" style={{ listStyle: 'none', padding: 0 }}>
+            {itemsCheckRoom.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
+            {[...itemsCheckRoom]
+              .map((item, originalIdx) => ({ item, originalIdx }))
+              .sort((a, b) => {
+                // First priority: Low stock items (refill type with amount < item's lowStockThreshold)
+                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
+                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
+                
+                if (aIsLowStock && !bIsLowStock) return -1;
+                if (!aIsLowStock && bIsLowStock) return 1;
+                
+                // Second priority: Supplies (refill) before Equipment (stable)
+                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
+              })
+              .map(({ item, originalIdx }) => (
+                <li key={originalIdx} style={{
+                  margin: '0 auto 2rem auto',
+                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fee2e2' : '#f1f5f9',
+                  borderRadius: '1rem',
+                  boxShadow: '0 2px 8px #e0e7ef',
+                  padding: '1.2rem',
+                  maxWidth: '220px',
+                  border: '2px solid',
+                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
+                  position: 'relative'
+                }}>
+                  {editIndex === originalIdx && editSite === 'check-room' ? (
+                    <React.Fragment>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <input 
+                          type="text" 
+                          value={editName} 
+                          onChange={e => setEditName(e.target.value)} 
+                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
+                        />
+                        <input 
+                          type="number" 
+                          value={editAmount} 
+                          onChange={e => setEditAmount(e.target.value)} 
+                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
+                        />
+                        <select 
+                          value={editType} 
+                          onChange={e => setEditType(e.target.value)} 
+                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
+                        >
+                          <option value="refill">Supplies</option>
+                          <option value="stable">Equipment</option>
+                        </select>
+                        <input 
+                          type="number" 
+                          value={editLowStockThreshold} 
+                          onChange={e => setEditLowStockThreshold(e.target.value)} 
+                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
+                          placeholder="Low stock threshold"
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <span style={{ fontSize: '1rem', color: '#64748b' }}>Type:</span>
+                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: editType === 'stable' ? '#2563eb' : '#059669' }}>
+                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
+                            </span>
+                            {editType === 'refill' && editAmount < editLowStockThreshold && (
+                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
+                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
+                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
+                          </div>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  ) : (
+                    <>
+                      {/* First row: Name and Amount */}
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
+                        <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669', minWidth: 'fit-content' }}>
+                          {item.amount}
+                        </span>
+                      </div>
+                      
+                      {/* Second row: Type, Threshold, and Buttons */}
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: '1' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: item.type === 'stable' ? '#2563eb' : '#059669' }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                            Low stock: &lt; {item.lowStockThreshold || LOW_STOCK}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'check-room')} style={getButtonStyle('#f59e0b')}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'check-room')} style={getButtonStyle('#ef4444')}>Delete</button>
                         </div>
                       </div>
                     </>
