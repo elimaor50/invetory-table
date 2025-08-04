@@ -654,15 +654,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'office' ? (
                     <React.Fragment>
@@ -712,48 +712,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      {/* First row: Name and Amount */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669', minWidth: 'fit-content' }}>
-                          {item.amount}
-                        </span>
-                      </div>
-                      
-                      {/* Second row: Type, Threshold, and Buttons */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: '1' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: item.type === 'stable' ? '#2563eb' : '#059669' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                            Low stock: &lt; {item.lowStockThreshold || LOW_STOCK}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'office')} style={getButtonStyle('#f59e0b')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'office')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'office')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'office')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
@@ -803,15 +826,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'innsbruck' ? (
                     <React.Fragment>
@@ -876,54 +899,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      {/* First row: Name and Amount */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#334155',
-                            wordBreak: 'break-word',
-                            maxWidth: isHebrew(item.name) ? '75%' : '65%',
-                            whiteSpace: item.name.length > 25 ? 'normal' : 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: item.name.length > 25 ? 'clip' : 'ellipsis',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            lineHeight: item.name.length > 25 ? '1.2' : '1.4',
-                            display: '-webkit-box',
-                            WebkitBoxOrient: 'vertical',
-                            WebkitLineClamp: item.name.length > 35 ? 3 : 2,
-                            maxHeight: item.name.length > 35 ? '2.8rem' : '2.4rem',
-                          }}
-                          title={item.name} // Add tooltip for full name
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.2rem', 
-                          color: '#64748b', 
-                          minWidth: '60px',
-                          textAlign: 'right'
-                        }}>Amount: {item.amount}</span>
-                      </div>
-                      {/* Second row: Type, Low Stock Alert, and Action buttons */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1', minWidth: '120px' }}>
-                          <span style={{ fontSize: isMobile ? '1rem' : '1.1rem', color: item.type === 'refill' ? (item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: isMobile ? '1rem' : '1.1rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                          <button onClick={() => handleEdit(originalIdx, 'innsbruck')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'innsbruck')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'innsbruck')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'innsbruck')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
@@ -969,15 +1009,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'ci' ? (
                     <React.Fragment>
@@ -1027,48 +1067,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      {/* First row: Name and Amount */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669', minWidth: 'fit-content' }}>
-                          {item.amount}
-                        </span>
-                      </div>
-                      
-                      {/* Second row: Type, Threshold, and Buttons */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: '1' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: item.type === 'stable' ? '#2563eb' : '#059669' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                            Low stock: &lt; {item.lowStockThreshold || LOW_STOCK}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'ci')} style={getButtonStyle('#f59e0b')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'ci')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'ci')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'ci')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
@@ -1114,15 +1177,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'gate' ? (
                     <React.Fragment>
@@ -1172,48 +1235,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      {/* First row: Name and Amount */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669', minWidth: 'fit-content' }}>
-                          {item.amount}
-                        </span>
-                      </div>
-                      
-                      {/* Second row: Type, Threshold, and Buttons */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: '1' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: item.type === 'stable' ? '#2563eb' : '#059669' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                            Low stock: &lt; {item.lowStockThreshold || LOW_STOCK}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'gate')} style={getButtonStyle('#f59e0b')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'gate')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'gate')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'gate')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
@@ -1259,15 +1345,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'ctx' ? (
                     <React.Fragment>
@@ -1325,47 +1411,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#334155',
-                            wordBreak: 'break-word',
-                            maxWidth: isHebrew(item.name) ? '75%' : '65%',
-                            whiteSpace: item.name.length > 25 ? 'normal' : 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: item.name.length > 25 ? 'clip' : 'ellipsis',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            lineHeight: item.name.length > 25 ? '1.2' : '1.4',
-                            display: '-webkit-box',
-                            WebkitBoxOrient: 'vertical',
-                            WebkitLineClamp: item.name.length > 35 ? 3 : 2,
-                            maxHeight: item.name.length > 35 ? '2.8rem' : '2.4rem',
-                          }}
-                          title={item.name}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ fontSize: '1.2rem', color: '#64748b', minWidth: '60px', textAlign: 'right' }}>Amount: {item.amount}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1', minWidth: '120px' }}>
-                          <span style={{ fontSize: isMobile ? '1rem' : '1.1rem', color: item.type === 'refill' ? (item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: isMobile ? '1rem' : '1.1rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                          <button onClick={() => handleEdit(originalIdx, 'ctx')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'ctx')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'ctx')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'ctx')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
@@ -1411,15 +1521,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'celler' ? (
                     <React.Fragment>
@@ -1477,47 +1587,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#334155',
-                            wordBreak: 'break-word',
-                            maxWidth: isHebrew(item.name) ? '75%' : '65%',
-                            whiteSpace: item.name.length > 25 ? 'normal' : 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: item.name.length > 25 ? 'clip' : 'ellipsis',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            lineHeight: item.name.length > 25 ? '1.2' : '1.4',
-                            display: '-webkit-box',
-                            WebkitBoxOrient: 'vertical',
-                            WebkitLineClamp: item.name.length > 35 ? 3 : 2,
-                            maxHeight: item.name.length > 35 ? '2.8rem' : '2.4rem',
-                          }}
-                          title={item.name}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ fontSize: '1.2rem', color: '#64748b', minWidth: '60px', textAlign: 'right' }}>Amount: {item.amount}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1', minWidth: '120px' }}>
-                          <span style={{ fontSize: isMobile ? '1rem' : '1.1rem', color: item.type === 'refill' ? (item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: isMobile ? '1rem' : '1.1rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                          <button onClick={() => handleEdit(originalIdx, 'celler')} style={getButtonStyle('#2563eb')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'celler')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'celler')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'celler')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
@@ -1568,15 +1702,15 @@ function App() {
               .map(({ item, originalIdx }) => (
                 <li key={originalIdx} style={{
                   background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '1rem',
-                  boxShadow: '0 2px 8px #e0e7ef',
-                  padding: '1.2rem',
-                  width: isMobile ? '90%' : '280px',
-                  maxWidth: '300px',
+                  borderRadius: '0.8rem',
+                  boxShadow: '0 2px 6px #e0e7ef',
+                  padding: '0.9rem',
+                  width: isMobile ? '90%' : '260px',
+                  maxWidth: '280px',
                   border: '2px solid',
                   borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
                   position: 'relative',
-                  marginBottom: '2rem'
+                  marginBottom: '1.5rem'
                 }}>
                   {editIndex === originalIdx && editSite === 'check-room' ? (
                     <React.Fragment>
@@ -1626,48 +1760,71 @@ function App() {
                       </div>
                     </React.Fragment>
                   ) : (
-                    <>
-                      {/* First row: Name and Amount */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669', minWidth: 'fit-content' }}>
-                          {item.amount}
-                        </span>
-                      </div>
-                      
-                      {/* Second row: Type, Threshold, and Buttons */}
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: '1' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: item.type === 'stable' ? '#2563eb' : '#059669' }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                            Low stock: &lt; {item.lowStockThreshold || LOW_STOCK}
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: getNameFontSize(item.name),
+                              color: '#1e293b',
+                              textAlign: isHebrew(item.name) ? 'right' : 'left',
+                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              lineHeight: '1.2'
+                            }}
+                          >
+                            {item.name}
                           </span>
                           {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>⚠️ Low stock!</span>
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
                           )}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'check-room')} style={getButtonStyle('#f59e0b')}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'check-room')} style={getButtonStyle('#ef4444')}>Delete</button>
+                        <span style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold',
+                          color: '#0f172a',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #cbd5e1',
+                          minWidth: '50px',
+                          textAlign: 'center'
+                        }}>
+                          {item.amount}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                          <button onClick={() => handleEdit(originalIdx, 'check-room')} style={{
+                            ...getButtonStyle('#f59e0b'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Edit</button>
+                          <button onClick={() => confirmDelete(originalIdx, 'check-room')} style={{
+                            ...getButtonStyle('#ef4444'),
+                            fontSize: '0.85rem',
+                            padding: '0.4rem 0.7rem'
+                          }}>Delete</button>
                         </div>
                       </div>
-                    </>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                          fontWeight: 'bold',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.4rem',
+                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                          border: '1px solid',
+                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                        }}>
+                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </li>
               ))}
