@@ -109,6 +109,11 @@ function App() {
   const CORRECT_PASSWORD = '2006';
   const AUTH_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
+  // Touch/swipe functionality for mobile navigation
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 30; // Reduced from 50 for better responsiveness
+
   // Function to show delete confirmation
   const confirmDelete = (idx, whichSite) => {
     const items = whichSite === 'office' ? itemsOffice : 
@@ -180,13 +185,72 @@ function App() {
   const scrollToActiveTab = (tabName) => {
     setActiveTab(tabName);
     if (isMobile) {
+      // Clear any existing timeouts to avoid conflicts
       setTimeout(() => {
         const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
         if (activeButton) {
-          activeButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          activeButton.scrollIntoView({ 
+            behavior: 'smooth', 
+            inline: 'center', 
+            block: 'nearest' 
+          });
         }
-      }, 100);
+      }, 50); // Reduced timeout for faster response
     }
+  };
+
+  // Touch/swipe handling functions
+  const onTouchStart = (e) => {
+    // Only handle swipes on the main container, not on form elements
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+      return;
+    }
+    
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    // Only handle swipes on the main container, not on form elements
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+      return;
+    }
+    
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = (e) => {
+    // Only handle swipes on the main container, not on form elements
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+      return;
+    }
+    
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe || isRightSwipe) {
+      // Prevent any default behavior that might interfere
+      e.preventDefault();
+      
+      // Define the correct order as specified: office → c/i → gate → ctx → check-room → celler → innsbruck → add item
+      const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
+      const currentIndex = tabs.indexOf(activeTab);
+      
+      if (isLeftSwipe && currentIndex < tabs.length - 1) {
+        // Swipe left: next tab
+        scrollToActiveTab(tabs[currentIndex + 1]);
+      } else if (isRightSwipe && currentIndex > 0) {
+        // Swipe right: previous tab
+        scrollToActiveTab(tabs[currentIndex - 1]);
+      }
+    }
+    
+    // Reset touch states
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   // Firestore real-time sync
@@ -316,6 +380,15 @@ function App() {
         .mobile-nav {
           scroll-behavior: smooth;
         }
+        /* Swipe indicator animation */
+        @keyframes swipeHint {
+          0% { transform: translateX(0); opacity: 0.7; }
+          50% { transform: translateX(10px); opacity: 1; }
+          100% { transform: translateX(0); opacity: 0.7; }
+        }
+        .swipe-indicator {
+          animation: swipeHint 2s ease-in-out infinite;
+        }
       `}</style>
       <div className="inventory-app" style={{ 
         display: isMobile ? 'block' : 'grid', 
@@ -330,8 +403,17 @@ function App() {
         overflow: 'auto', 
         margin: 0, 
         padding: isMobile ? '0' : '1rem',
-        minHeight: '100vh'
-      }}>
+        minHeight: '100vh',
+        touchAction: isMobile ? 'pan-x' : 'auto', // Enable horizontal pan gestures
+        userSelect: 'none', // Prevent text selection during swipe
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none'
+      }}
+      onTouchStart={isMobile ? onTouchStart : undefined}
+      onTouchMove={isMobile ? onTouchMove : undefined}
+      onTouchEnd={isMobile ? onTouchEnd : undefined}
+      >
       
       {/* EliExpress Header */}
       <div style={{
@@ -552,62 +634,330 @@ function App() {
             }}>ADD ITEM</button>
         </div>
       )}
-      {/* Add Item */}
+      {/* Add Item - Modern Design */}
       {(!isMobile || activeTab === 'add') && (
-        <div style={{ gridColumn: isMobile ? '1' : '8', flex: isMobile ? 'none' : 'unset', minWidth: '0', padding: '2rem 1.5rem', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 0 10px #e0e7ef', borderRadius: isMobile ? '0' : '1rem', height: isMobile ? 'auto' : '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#2d3748' }}>Add Item</h2>
+        <div style={{ 
+          gridColumn: isMobile ? '1' : '8', 
+          flex: isMobile ? 'none' : 'unset', 
+          minWidth: '0', 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'flex-start', 
+          borderRadius: isMobile ? '0' : '1rem', 
+          height: isMobile ? '100vh' : '100%', 
+          overflowY: 'auto', 
+          boxSizing: 'border-box',
+          padding: isMobile ? '0.5rem 0.5rem' : '1.5rem',
+          position: 'relative',
+          boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+        }}>
+          {/* Background Pattern */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+            borderRadius: isMobile ? '0' : '1rem',
+            pointerEvents: 'none'
+          }} />
+          
+          {/* Header Section */}
+          <div style={{
+            textAlign: 'center',
+            marginBottom: isMobile ? '0.5rem' : '1.5rem',
+            zIndex: 1
+          }}>
+            <div style={{
+              fontSize: isMobile ? '1.5rem' : '2.5rem',
+              marginBottom: isMobile ? '0.1rem' : '0.3rem'
+            }}>
+              ✨
+            </div>
+            <h2 style={{ 
+              fontSize: isMobile ? '1.2rem' : '2rem', 
+              margin: '0', 
+              color: '#fff', 
+              fontWeight: '700',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              letterSpacing: '-0.5px'
+            }}>
+              Add New Item
+            </h2>
+            <p style={{
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: isMobile ? '0.7rem' : '0.9rem',
+              margin: isMobile ? '0.1rem 0 0 0' : '0.3rem 0 0 0',
+              fontWeight: '400'
+            }}>
+              Create inventory entries
+            </p>
+          </div>
+
+          {/* Authentication Status */}
           {isAuthenticated && (
             <div style={{
-              backgroundColor: '#22c55e',
+              backgroundColor: 'rgba(34, 197, 94, 0.9)',
               color: '#fff',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              fontSize: '0.9rem',
-              fontWeight: 'bold',
-              marginBottom: '1rem',
+              padding: isMobile ? '0.4rem 0.8rem' : '0.75rem 1.25rem',
+              borderRadius: '50px',
+              fontSize: isMobile ? '0.7rem' : '0.8rem',
+              fontWeight: '600',
+              marginBottom: isMobile ? '0.5rem' : '1.5rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)',
+              zIndex: 1
             }}>
-              ✅ Authenticated - Adding items enabled
+              <span>✅</span>
+              <span>Ready to add items</span>
             </div>
           )}
-          <div className="add-item" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%', maxWidth: '300px', minWidth: '0', background: '#f1f5f9', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 2px 8px #e0e7ef', margin: '1rem auto', boxSizing: 'border-box', alignItems: 'stretch', justifyContent: 'center' }}>
-            <select value={site} onChange={e => setSite(e.target.value)} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}>
-              <option value="office">Office</option>
-              <option value="innsbruck">Innsbruck</option>
-              <option value="ci">C/I</option>
-              <option value="gate">GATE</option>
-              <option value="ctx">CTX</option>
-              <option value="celler">CELLER</option>
-              <option value="check-room">CHECK-ROOM</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Item name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-            />
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-            />
-            <input
-              type="number"
-              placeholder="Low stock threshold (e.g., 10)"
-              value={lowStockThreshold}
-              onChange={e => setLowStockThreshold(e.target.value)}
-              style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-            />
-            <select value={type} onChange={e => setType(e.target.value)} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%' }}>
-              <option value="refill">Supplies</option>
-              <option value="stable">Equipment</option>
-            </select>
-            <button onClick={attemptAddItem} style={{ fontSize: '1.2rem', padding: '0.7rem', borderRadius: '0.5rem', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>Add Item</button>
+
+          {/* Form Container */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: isMobile ? '0.6rem' : '1.2rem', 
+            width: '100%', 
+            maxWidth: isMobile ? '100%' : '350px', 
+            background: 'rgba(255, 255, 255, 0.95)', 
+            padding: isMobile ? '1rem 0.8rem' : '2rem 1.5rem', 
+            borderRadius: '1.5rem', 
+            boxShadow: '0 16px 40px rgba(0,0,0,0.1)', 
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            zIndex: 1,
+            flex: '1',
+            minHeight: '0',
+            boxSizing: 'border-box'
+          }}>
+            {/* Location Selector */}
+            <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+              <label style={{
+                display: 'block',
+                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: isMobile ? '0.25rem' : '0.4rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                📍 Location
+              </label>
+              <select 
+                value={site} 
+                onChange={e => setSite(e.target.value)} 
+                style={{ 
+                  fontSize: isMobile ? '0.8rem' : '1rem', 
+                  padding: isMobile ? '0.6rem 0.7rem' : '0.875rem 1rem', 
+                  borderRadius: '0.75rem', 
+                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              >
+                <option value="office">🏢 Office</option>
+                <option value="ci">🔧 C/I</option>
+                <option value="gate">🚪 GATE</option>
+                <option value="ctx">⚡ CTX</option>
+                <option value="check-room">✅ CHECK-ROOM</option>
+                <option value="celler">🏠 CELLER</option>
+                <option value="innsbruck">🏔️ Innsbruck</option>
+              </select>
+            </div>
+
+            {/* Item Name */}
+            <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+              <label style={{
+                display: 'block',
+                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: isMobile ? '0.25rem' : '0.4rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                🏷️ Item Name
+              </label>
+              <input
+                type="text"
+                placeholder="Enter item name..."
+                value={name}
+                onChange={e => setName(e.target.value)}
+                style={{ 
+                  fontSize: isMobile ? '0.8rem' : '1rem', 
+                  padding: isMobile ? '0.6rem 0.7rem' : '0.875rem 1rem', 
+                  borderRadius: '0.75rem', 
+                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+            </div>
+
+            {/* Quantity */}
+            <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+              <label style={{
+                display: 'block',
+                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: isMobile ? '0.25rem' : '0.4rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                📦 Quantity
+              </label>
+              <input
+                type="number"
+                placeholder="Enter quantity..."
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                style={{ 
+                  fontSize: isMobile ? '0.8rem' : '1rem', 
+                  padding: isMobile ? '0.6rem 0.7rem' : '0.875rem 1rem', 
+                  borderRadius: '0.75rem', 
+                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+            </div>
+
+            {/* Low Stock Threshold */}
+            <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+              <label style={{
+                display: 'block',
+                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: isMobile ? '0.25rem' : '0.4rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                ⚠️ Low Stock Alert
+              </label>
+              <input
+                type="number"
+                placeholder="Alert when below..."
+                value={lowStockThreshold}
+                onChange={e => setLowStockThreshold(e.target.value)}
+                style={{ 
+                  fontSize: isMobile ? '0.8rem' : '1rem', 
+                  padding: isMobile ? '0.6rem 0.7rem' : '0.875rem 1rem', 
+                  borderRadius: '0.75rem', 
+                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+            </div>
+
+            {/* Item Type */}
+            <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+              <label style={{
+                display: 'block',
+                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: isMobile ? '0.25rem' : '0.4rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                🏷️ Item Type
+              </label>
+              <select 
+                value={type} 
+                onChange={e => setType(e.target.value)} 
+                style={{ 
+                  fontSize: isMobile ? '0.8rem' : '1rem', 
+                  padding: isMobile ? '0.6rem 0.7rem' : '0.875rem 1rem', 
+                  borderRadius: '0.75rem', 
+                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              >
+                <option value="refill">📦 Supplies (Consumable)</option>
+                <option value="stable">🔧 Equipment (Permanent)</option>
+              </select>
+            </div>
+
+            {/* Add Button */}
+            <button 
+              onClick={attemptAddItem} 
+              style={{ 
+                fontSize: isMobile ? '0.9rem' : '1.1rem', 
+                padding: isMobile ? '0.7rem 1.2rem' : '1rem 2rem', 
+                borderRadius: '0.75rem', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                color: '#fff', 
+                border: 'none', 
+                cursor: 'pointer', 
+                fontWeight: '700',
+                marginTop: isMobile ? '0.3rem' : '0.5rem',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+              }}
+            >
+              ✨ Add Item
+            </button>
           </div>
         </div>
       )}
@@ -2027,6 +2377,37 @@ function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Swipe Indicator for Mobile - Shows position in correct navigation order */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          color: '#fff',
+          padding: '0.5rem 1rem',
+          borderRadius: '20px',
+          fontSize: '0.8rem',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          zIndex: 1000,
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <span className="swipe-indicator">← Swipe →</span>
+          <span style={{ opacity: 0.8, fontSize: '0.7rem' }}>
+            {(() => {
+              const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
+              const currentIndex = tabs.indexOf(activeTab);
+              return currentIndex !== -1 ? `${currentIndex + 1}/${tabs.length}` : '';
+            })()}
+          </span>
         </div>
       )}
     </>
