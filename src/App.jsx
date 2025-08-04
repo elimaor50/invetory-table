@@ -714,25 +714,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -760,18 +756,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
@@ -901,25 +902,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -947,18 +944,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
@@ -1069,25 +1071,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -1115,18 +1113,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
@@ -1237,25 +1240,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -1283,18 +1282,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
@@ -1413,25 +1417,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -1459,18 +1459,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
@@ -1589,25 +1594,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -1635,18 +1636,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
@@ -1762,25 +1768,21 @@ function App() {
                   ) : (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: '1' }}>
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              fontSize: getNameFontSize(item.name),
-                              color: '#1e293b',
-                              textAlign: isHebrew(item.name) ? 'right' : 'left',
-                              direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                              wordBreak: 'break-word',
-                              hyphens: 'auto',
-                              lineHeight: '1.2'
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
+                        <span
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: getNameFontSize(item.name),
+                            color: '#1e293b',
+                            textAlign: isHebrew(item.name) ? 'right' : 'left',
+                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            lineHeight: '1.2',
+                            flex: '1'
+                          }}
+                        >
+                          {item.name}
+                        </span>
                         <span style={{ 
                           fontSize: '1.3rem', 
                           fontWeight: 'bold',
@@ -1808,18 +1810,23 @@ function App() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.9rem', 
-                          color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                          fontWeight: 'bold',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '0.4rem',
-                          background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                          border: '1px solid',
-                          borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                        }}>
-                          {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            fontSize: '0.9rem', 
+                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '0.4rem',
+                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                            border: '1px solid',
+                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                          }}>
+                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                          </span>
+                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
                           Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                         </span>
