@@ -112,6 +112,7 @@ function App() {
   // Touch/swipe functionality for mobile navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const minSwipeDistance = 30; // Reduced from 50 for better responsiveness
 
   // Function to show delete confirmation
@@ -181,21 +182,61 @@ function App() {
     };
   }, [authTimeout]);
 
-  // Helper function to scroll active tab into view on mobile
+  // Helper function to scroll active tab into view on mobile with smooth animation
   const scrollToActiveTab = (tabName) => {
-    setActiveTab(tabName);
+    if (isAnimating) return; // Prevent multiple animations
+    
+    setIsAnimating(true);
+    
     if (isMobile) {
-      // Clear any existing timeouts to avoid conflicts
+      // Determine animation direction
+      const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
+      const currentIndex = tabs.indexOf(activeTab);
+      const newIndex = tabs.indexOf(tabName);
+      const isForward = newIndex > currentIndex;
+      
+      // Get the active column
+      const activeColumn = document.querySelector('.column-container');
+      if (activeColumn) {
+        // Add exit animation
+        activeColumn.style.transform = isForward ? 'translateX(-50px)' : 'translateX(50px)';
+        activeColumn.style.opacity = '0';
+      }
+      
       setTimeout(() => {
-        const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
-        if (activeButton) {
-          activeButton.scrollIntoView({ 
-            behavior: 'smooth', 
-            inline: 'center', 
-            block: 'nearest' 
-          });
-        }
-      }, 50); // Reduced timeout for faster response
+        setActiveTab(tabName);
+        
+        // Animate new column in
+        setTimeout(() => {
+          const newColumn = document.querySelector('.column-container');
+          if (newColumn) {
+            // Start from opposite direction
+            newColumn.style.transform = isForward ? 'translateX(50px)' : 'translateX(-50px)';
+            newColumn.style.opacity = '0';
+            
+            // Animate to final position
+            requestAnimationFrame(() => {
+              newColumn.style.transform = 'translateX(0)';
+              newColumn.style.opacity = '1';
+            });
+          }
+          
+          // Scroll navigation bar
+          const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+          if (activeButton) {
+            activeButton.scrollIntoView({ 
+              behavior: 'smooth', 
+              inline: 'center', 
+              block: 'nearest' 
+            });
+          }
+          
+          setTimeout(() => setIsAnimating(false), 300);
+        }, 50);
+      }, 200);
+    } else {
+      setActiveTab(tabName);
+      setIsAnimating(false);
     }
   };
 
@@ -380,17 +421,47 @@ function App() {
         .mobile-nav {
           scroll-behavior: smooth;
         }
-        /* Swipe indicator animation */
-        @keyframes swipeHint {
-          0% { transform: translateX(0); opacity: 0.7; }
-          50% { transform: translateX(10px); opacity: 1; }
-          100% { transform: translateX(0); opacity: 0.7; }
+        /* Smooth slide animations for columns */
+        .column-container {
+          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;
+          transform: translateX(0);
+          opacity: 1;
         }
-        .swipe-indicator {
-          animation: swipeHint 2s ease-in-out infinite;
+        /* Enhanced swipe animations */
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideInLeft {
+          from {
+            transform: translateX(-100px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .slide-enter {
+          animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .slide-enter-reverse {
+          animation: slideInLeft 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        /* Ensure form elements don't interfere with animations */
+        .column-container input,
+        .column-container select,
+        .column-container button {
+          pointer-events: auto;
         }
       `}</style>
-      <div className="inventory-app" style={{ 
+      <div className="inventory-app main-container" style={{ 
         display: isMobile ? 'block' : 'grid', 
         gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr 1fr 1fr 1fr auto', 
         gap: isMobile ? '0' : '1rem', 
@@ -636,7 +707,7 @@ function App() {
       )}
       {/* Add Item - Modern Design */}
       {(!isMobile || activeTab === 'add') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '8', 
           flex: isMobile ? 'none' : 'unset', 
           minWidth: '0', 
@@ -963,7 +1034,7 @@ function App() {
       )}
       {/* Office Column */}
       {(!isMobile || activeTab === 'office') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '1', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -976,7 +1047,10 @@ function App() {
           marginTop: isMobile ? '2rem' : '0',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
+          transition: isMobile ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease' : 'none',
+          transform: isMobile && activeTab === 'office' ? 'translateX(0)' : 'translateX(0)',
+          opacity: isMobile && activeTab === 'office' ? 1 : 1
         }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>Office</h2>
           <ul className="item-list" style={{ 
@@ -1136,7 +1210,7 @@ function App() {
       )}
       {/* Innsbruck Column */}
       {(!isMobile || activeTab === 'innsbruck') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '7', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -1324,7 +1398,7 @@ function App() {
       )}
       {/* C/I Column */}
       {(!isMobile || activeTab === 'ci') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '2', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -1493,7 +1567,7 @@ function App() {
       )}
       {/* GATE Column */}
       {(!isMobile || activeTab === 'gate') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '3', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -1662,7 +1736,7 @@ function App() {
       )}
       {/* CTX Column */}
       {(!isMobile || activeTab === 'ctx') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '4', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -1839,7 +1913,7 @@ function App() {
       )}
       {/* CELLER Column */}
       {(!isMobile || activeTab === 'celler') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '6', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -2017,7 +2091,7 @@ function App() {
 
       {/* Check-Room Column */}
       {(!isMobile || activeTab === 'check-room') && (
-        <div style={{ 
+        <div className="column-container" style={{ 
           gridColumn: isMobile ? '1' : '5', 
           flex: isMobile ? 'none' : 'unset', 
           background: '#fff', 
@@ -2377,37 +2451,6 @@ function App() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Swipe Indicator for Mobile - Shows position in correct navigation order */}
-      {isMobile && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          color: '#fff',
-          padding: '0.5rem 1rem',
-          borderRadius: '20px',
-          fontSize: '0.8rem',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          zIndex: 1000,
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
-        }}>
-          <span className="swipe-indicator">← Swipe →</span>
-          <span style={{ opacity: 0.8, fontSize: '0.7rem' }}>
-            {(() => {
-              const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
-              const currentIndex = tabs.indexOf(activeTab);
-              return currentIndex !== -1 ? `${currentIndex + 1}/${tabs.length}` : '';
-            })()}
-          </span>
         </div>
       )}
     </>
