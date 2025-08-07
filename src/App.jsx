@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { db } from './firebase';
 import {
@@ -109,11 +109,41 @@ function App() {
   const CORRECT_PASSWORD = '2006';
   const AUTH_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-  // Touch/swipe functionality for mobile navigation
+  // Touch/swipe functionality for mobile navigation with scroll position memory
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const minSwipeDistance = 30; // Reduced from 50 for better responsiveness
+  const [scrollPositions, setScrollPositions] = useState({}); // Store scroll positions for each tab
+
+  // Simple scroll position memory using localStorage
+  const saveScrollPosition = useCallback((tabName) => {
+    if (!isMobile) return;
+    
+    const container = document.querySelector('.column-container');
+    if (container) {
+      const scrollTop = container.scrollTop;
+      localStorage.setItem(`scroll_${tabName}`, scrollTop.toString());
+      console.log(`💾 Saved ${tabName} scroll: ${scrollTop}`);
+    }
+  }, [isMobile]);
+
+  const restoreScrollPosition = useCallback((tabName) => {
+    if (!isMobile) return;
+    
+    const savedScroll = localStorage.getItem(`scroll_${tabName}`);
+    if (savedScroll) {
+      const scrollTop = parseInt(savedScroll, 10);
+      
+      // Wait a bit for the DOM to be ready
+      setTimeout(() => {
+        const container = document.querySelector('.column-container');
+        if (container) {
+          container.scrollTop = scrollTop;
+          console.log(`📖 Restored ${tabName} scroll: ${scrollTop}`);
+        }
+      }, 300);
+    }
+  }, [isMobile]);
 
   // Function to show delete confirmation
   const confirmDelete = (idx, whichSite) => {
@@ -189,6 +219,9 @@ function App() {
     setIsAnimating(true);
     
     if (isMobile) {
+      // Save current scroll position before switching
+      saveScrollPosition(activeTab);
+      
       // Determine animation direction
       const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
       const currentIndex = tabs.indexOf(activeTab);
@@ -219,6 +252,9 @@ function App() {
               newColumn.style.transform = 'translateX(0)';
               newColumn.style.opacity = '1';
             });
+            
+            // Restore scroll position for the new tab
+            restoreScrollPosition(tabName);
           }
           
           // Scroll navigation bar
@@ -240,56 +276,92 @@ function App() {
     }
   };
 
-  // Touch/swipe handling functions
+  // Smart touch/swipe handling functions - allow swipes but prevent interference with scrolling
   const onTouchStart = (e) => {
-    // Only handle swipes on the main container, not on form elements
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+    // Only ignore touches on form inputs and buttons
+    if (e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'SELECT' || 
+        e.target.tagName === 'BUTTON' || 
+        e.target.tagName === 'TEXTAREA') {
       return;
     }
     
     setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    setTouchStart({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+      time: Date.now()
+    });
   };
 
   const onTouchMove = (e) => {
-    // Only handle swipes on the main container, not on form elements
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+    // Only ignore touches on form inputs and buttons
+    if (e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'SELECT' || 
+        e.target.tagName === 'BUTTON' || 
+        e.target.tagName === 'TEXTAREA') {
       return;
     }
     
-    setTouchEnd(e.targetTouches[0].clientX);
+    if (!touchStart) return;
+    
+    setTouchEnd({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+      time: Date.now()
+    });
   };
 
   const onTouchEnd = (e) => {
-    // Only handle swipes on the main container, not on form elements
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+    // Only ignore touches on form inputs and buttons
+    if (e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'SELECT' || 
+        e.target.tagName === 'BUTTON' || 
+        e.target.tagName === 'TEXTAREA') {
       return;
     }
     
     if (!touchStart || !touchEnd) return;
     
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    const deltaX = touchStart.x - touchEnd.x;
+    const deltaY = touchStart.y - touchEnd.y;
+    const deltaTime = touchEnd.time - touchStart.time;
+    
+    const horizontalDistance = Math.abs(deltaX);
+    const verticalDistance = Math.abs(deltaY);
+    
+    // Balanced swipe detection - sensitive enough but prevents accidental swipes during scrolling
+    const minSwipeDistance = 80;       // Reasonable threshold
+    const maxVerticalMovement = 60;    // Allow some vertical movement
+    const minHorizontalDominance = 1.5; // 1.5:1 ratio - more forgiving
+    const maxSwipeTime = 800;          // Allow slower swipes
+    
+    const swipeSpeed = horizontalDistance / Math.max(deltaTime, 1);
+    
+    const isHorizontalSwipe = horizontalDistance > minSwipeDistance && 
+                             verticalDistance < maxVerticalMovement && 
+                             horizontalDistance > verticalDistance * minHorizontalDominance &&
+                             deltaTime < maxSwipeTime;
 
-    if (isLeftSwipe || isRightSwipe) {
-      // Prevent any default behavior that might interfere
+    if (isHorizontalSwipe) {
+      const isLeftSwipe = deltaX > 0;
+      const isRightSwipe = deltaX < 0;
+      
       e.preventDefault();
       
-      // Define the correct order as specified: office → c/i → gate → ctx → check-room → celler → innsbruck → add item
+      // Save current scroll position before switching
+      saveScrollPosition(activeTab);
+      
       const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
       const currentIndex = tabs.indexOf(activeTab);
       
       if (isLeftSwipe && currentIndex < tabs.length - 1) {
-        // Swipe left: next tab
         scrollToActiveTab(tabs[currentIndex + 1]);
       } else if (isRightSwipe && currentIndex > 0) {
-        // Swipe right: previous tab
         scrollToActiveTab(tabs[currentIndex - 1]);
       }
     }
     
-    // Reset touch states
     setTouchStart(null);
     setTouchEnd(null);
   };
@@ -309,6 +381,33 @@ function App() {
     });
     return unsubscribe;
   }, []);
+
+  // Auto-save scroll position when user scrolls
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    const handleScroll = () => {
+      saveScrollPosition(activeTab);
+    };
+    
+    const container = document.querySelector('.column-container');
+    if (container) {
+      console.log(`� Setup scroll tracking for ${activeTab}`);
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [activeTab, isMobile, saveScrollPosition]);
+
+  // Restore scroll position when activeTab changes
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    console.log(`🔄 Switching to ${activeTab}`);
+    restoreScrollPosition(activeTab);
+  }, [activeTab, isMobile, restoreScrollPosition]);
 
   // Add item to Firestore
   const handleAdd = async () => {
