@@ -1,5 +1,6 @@
  import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
+import { read, utils, writeFile } from 'xlsx';
 import { db } from './firebase';
 import {
   collection,
@@ -161,6 +162,7 @@ function App() {
   const [editSite, setEditSite] = useState('office');
   const [activeTab, setActiveTab] = useState('office');
   const LOW_STOCK = 10;
+  const fileInputRef = React.useRef(null);
 
   // Delete confirmation dialog state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -472,6 +474,53 @@ function App() {
     console.log(`🔄 Switching to ${activeTab}`);
     restoreScrollPosition(activeTab);
   }, [activeTab, isMobile, restoreScrollPosition]);
+
+  const handleExport = () => {
+    // Prepare data for side-by-side layout (Site Name | Qty | Spacer | Site Name | Qty ...)
+    const wsData = [];
+    
+    // 1. Create Header Row
+    const headers = [];
+    sites.forEach(site => {
+      headers.push(site.name); // Column 1: Site Name (Item Name will go here)
+      headers.push('Qty');     // Column 2: Amount
+      headers.push('');        // Column 3: Spacer
+    });
+    wsData.push(headers);
+
+    // 2. Determine max rows needed
+    let maxRows = 0;
+    sites.forEach(site => {
+      const count = getItemsForSite(site.id).length;
+      if (count > maxRows) maxRows = count;
+    });
+
+    // 3. Build data rows
+    for (let i = 0; i < maxRows; i++) {
+      const row = [];
+      sites.forEach(site => {
+        const items = getItemsForSite(site.id);
+        const item = items[i];
+        if (item) {
+          row.push(item.name);
+          row.push(item.amount);
+        } else {
+          row.push('');
+          row.push('');
+        }
+        row.push(''); // Spacer
+      });
+      wsData.push(row);
+    }
+
+    const ws = utils.aoa_to_sheet(wsData);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Inventory Overview");
+    
+    // Generate filename with date
+    const date = new Date().toISOString().split('T')[0];
+    writeFile(wb, `Inventory_Backup_${date}.xlsx`);
+  };
 
   // Add item to Firestore
   const handleAdd = async () => {
@@ -1096,6 +1145,28 @@ function App() {
             >
               ✨ Add Item
             </button>
+
+            {/* Export Button */}
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+              <button 
+                onClick={handleExport}
+                style={{
+                  background: 'none',
+                  border: '1px dashed #cbd5e1',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  width: '100%'
+                }}
+              >
+                💾 Export Backup to Excel
+              </button>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+                Download a backup of all items
+              </p>
+            </div>
           </div>
         </div>
       )}
