@@ -8,7 +8,9 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
-  query
+  query,
+  setDoc,
+  getDoc
 } from 'firebase/firestore';
 
 function App() {
@@ -83,6 +85,69 @@ function App() {
   const [itemsCTX, setItemsCTX] = useState([]);
   const [itemsCeller, setItemsCeller] = useState([]);
   const [itemsCheckRoom, setItemsCheckRoom] = useState([]);
+  
+  // Dynamic sites state
+  const [sites, setSites] = useState([]);
+  const [allItems, setAllItems] = useState([]);
+  const [newSiteName, setNewSiteName] = useState('');
+  const [showAddSite, setShowAddSite] = useState(false);
+
+  // Fetch sites
+  useEffect(() => {
+    const fetchSites = async () => {
+      const docRef = doc(db, 'settings', 'sites');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setSites(docSnap.data().list);
+      } else {
+        // Initialize with defaults
+        const defaultSites = [
+          { id: 'office', name: 'Office' },
+          { id: 'ci', name: 'C/I' },
+          { id: 'gate', name: 'GATE' },
+          { id: 'ctx', name: 'CTX' },
+          { id: 'check-room', name: 'CHECK-ROOM' },
+          { id: 'celler', name: 'CELLER' },
+          { id: 'innsbruck', name: 'Innsbruck' }
+        ];
+        await setDoc(docRef, { list: defaultSites });
+        setSites(defaultSites);
+      }
+    };
+    fetchSites();
+    
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'sites'), (doc) => {
+        if (doc.exists()) {
+            setSites(doc.data().list);
+        }
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleAddSite = async () => {
+    if (!newSiteName) return;
+    const id = newSiteName.toLowerCase().replace(/\s+/g, '-');
+    const newSite = { id, name: newSiteName };
+    if (sites.some(s => s.id === id)) {
+        alert('Site already exists!');
+        return;
+    }
+    const newSites = [...sites, newSite];
+    await setDoc(doc(db, 'settings', 'sites'), { list: newSites });
+    setNewSiteName('');
+    setShowAddSite(false);
+  };
+
+  const handleDeleteSite = async (siteId) => {
+      if (!window.confirm('Are you sure you want to delete this column? Items will remain but be hidden.')) return;
+      const newSites = sites.filter(s => s.id !== siteId);
+      await setDoc(doc(db, 'settings', 'sites'), { list: newSites });
+      // If we deleted the active tab, switch to the first available or 'add'
+      if (activeTab === siteId) {
+          setActiveTab('add');
+      }
+  };
+
   const [site, setSite] = useState('office');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -145,14 +210,12 @@ function App() {
     }
   }, [isMobile]);
 
+  // Helper to get items for a site
+  const getItemsForSite = (siteId) => allItems.filter(item => item.site === siteId);
+
   // Function to show delete confirmation
   const confirmDelete = (idx, whichSite) => {
-    const items = whichSite === 'office' ? itemsOffice : 
-                  whichSite === 'innsbruck' ? itemsInnsbruck :
-                  whichSite === 'ci' ? itemsCI :
-                  whichSite === 'gate' ? itemsGate :
-                  whichSite === 'ctx' ? itemsCTX : 
-                  whichSite === 'celler' ? itemsCeller : itemsCheckRoom;
+    const items = getItemsForSite(whichSite);
     
     const item = items[idx];
     setDeleteTarget({ idx, site: whichSite, itemName: item?.name || 'Unknown Item' });
@@ -223,7 +286,7 @@ function App() {
       saveScrollPosition(activeTab);
       
       // Determine animation direction
-      const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
+      const tabs = [...sites.map(s => s.id), 'add'];
       const currentIndex = tabs.indexOf(activeTab);
       const newIndex = tabs.indexOf(tabName);
       const isForward = newIndex > currentIndex;
@@ -352,7 +415,7 @@ function App() {
       // Save current scroll position before switching
       saveScrollPosition(activeTab);
       
-      const tabs = ['office', 'ci', 'gate', 'ctx', 'check-room', 'celler', 'innsbruck', 'add'];
+      const tabs = [...sites.map(s => s.id), 'add'];
       const currentIndex = tabs.indexOf(activeTab);
       
       if (isLeftSwipe && currentIndex < tabs.length - 1) {
@@ -371,6 +434,7 @@ function App() {
     const q = query(collection(db, 'inventory'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const allItems = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setAllItems(allItems);
       setItemsOffice(allItems.filter(item => item.site === 'office'));
       setItemsInnsbruck(allItems.filter(item => item.site === 'innsbruck'));
       setItemsCI(allItems.filter(item => item.site === 'ci'));
@@ -429,12 +493,7 @@ function App() {
   // Delete item from Firestore (called after confirmation)
   const handleDelete = async () => {
     if (deleteTarget.idx !== null && deleteTarget.site) {
-      const items = deleteTarget.site === 'office' ? itemsOffice : 
-                    deleteTarget.site === 'innsbruck' ? itemsInnsbruck :
-                    deleteTarget.site === 'ci' ? itemsCI :
-                    deleteTarget.site === 'gate' ? itemsGate :
-                    deleteTarget.site === 'ctx' ? itemsCTX : 
-                    deleteTarget.site === 'celler' ? itemsCeller : itemsCheckRoom;
+      const items = getItemsForSite(deleteTarget.site);
       const item = items.find((_, i) => i === deleteTarget.idx);
       if (item && item.id) {
         await deleteDoc(doc(db, 'inventory', item.id));
@@ -449,12 +508,7 @@ function App() {
   const handleEdit = (idx, whichSite) => {
     setEditIndex(idx);
     setEditSite(whichSite);
-    const items = whichSite === 'office' ? itemsOffice : 
-                  whichSite === 'innsbruck' ? itemsInnsbruck :
-                  whichSite === 'ci' ? itemsCI :
-                  whichSite === 'gate' ? itemsGate :
-                  whichSite === 'ctx' ? itemsCTX : 
-                  whichSite === 'celler' ? itemsCeller : itemsCheckRoom;
+    const items = getItemsForSite(whichSite);
     const item = items.find((_, i) => i === idx);
     setEditName(item.name);
     setEditAmount(item.amount);
@@ -465,12 +519,7 @@ function App() {
   // Save edited item to Firestore
   const handleSave = async () => {
     if (!editName || !editAmount || isNaN(editAmount) || !editLowStockThreshold || isNaN(editLowStockThreshold)) return;
-    const items = editSite === 'office' ? itemsOffice : 
-                  editSite === 'innsbruck' ? itemsInnsbruck :
-                  editSite === 'ci' ? itemsCI :
-                  editSite === 'gate' ? itemsGate :
-                  editSite === 'ctx' ? itemsCTX : 
-                  editSite === 'celler' ? itemsCeller : itemsCheckRoom;
+    const items = getItemsForSite(editSite);
     const item = items.find((_, i) => i === editIndex);
     if (item && item.id) {
       await updateDoc(doc(db, 'inventory', item.id), {
@@ -637,6 +686,22 @@ function App() {
               Inventory Management System
             </div>
           </div>
+          <button 
+            onClick={() => setShowAddSite(true)}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              borderRadius: '0.5rem',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: isMobile ? '0.8rem' : '1rem',
+              marginLeft: '1rem'
+            }}
+          >
+            + Add Column
+          </button>
         </div>
         {!isMobile && (
           <div style={{
@@ -674,118 +739,25 @@ function App() {
           width: '100vw',
           boxSizing: 'border-box'
         }}>
-          <button 
-            data-tab="office"
-            onClick={() => scrollToActiveTab('office')} 
-            style={{ 
-              fontWeight: activeTab === 'office' ? 'bold' : 'normal', 
-              background: activeTab === 'office' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'office' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>OFFICE</button>
-          <button 
-            data-tab="ci"
-            onClick={() => scrollToActiveTab('ci')} 
-            style={{ 
-              fontWeight: activeTab === 'ci' ? 'bold' : 'normal', 
-              background: activeTab === 'ci' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'ci' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>C/I</button>
-          <button 
-            data-tab="gate"
-            onClick={() => scrollToActiveTab('gate')} 
-            style={{ 
-              fontWeight: activeTab === 'gate' ? 'bold' : 'normal', 
-              background: activeTab === 'gate' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'gate' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>GATE</button>
-          <button 
-            data-tab="ctx"
-            onClick={() => scrollToActiveTab('ctx')} 
-            style={{ 
-              fontWeight: activeTab === 'ctx' ? 'bold' : 'normal', 
-              background: activeTab === 'ctx' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'ctx' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>CTX</button>
-          <button 
-            data-tab="check-room"
-            onClick={() => scrollToActiveTab('check-room')} 
-            style={{ 
-              fontWeight: activeTab === 'check-room' ? 'bold' : 'normal', 
-              background: activeTab === 'check-room' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'check-room' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>CHECK-ROOM</button>
-          <button 
-            data-tab="celler"
-            onClick={() => scrollToActiveTab('celler')} 
-            style={{ 
-              fontWeight: activeTab === 'celler' ? 'bold' : 'normal', 
-              background: activeTab === 'celler' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'celler' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>CELLER</button>
-          <button 
-            data-tab="innsbruck"
-            onClick={() => scrollToActiveTab('innsbruck')} 
-            style={{ 
-              fontWeight: activeTab === 'innsbruck' ? 'bold' : 'normal', 
-              background: activeTab === 'innsbruck' ? '#2563eb' : '#f1f5f9', 
-              color: activeTab === 'innsbruck' ? '#fff' : '#2563eb', 
-              border: 'none', 
-              borderRadius: '0.5rem', 
-              padding: '0.8rem 1.2rem', 
-              fontSize: '1rem', 
-              cursor: 'pointer', 
-              minWidth: 'fit-content',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}>INNSBRUCK</button>
+          {sites.map(site => (
+            <button 
+              key={site.id}
+              data-tab={site.id}
+              onClick={() => scrollToActiveTab(site.id)} 
+              style={{ 
+                fontWeight: activeTab === site.id ? 'bold' : 'normal', 
+                background: activeTab === site.id ? '#2563eb' : '#f1f5f9', 
+                color: activeTab === site.id ? '#fff' : '#2563eb', 
+                border: 'none', 
+                borderRadius: '0.5rem', 
+                padding: '0.8rem 1.2rem', 
+                fontSize: '1rem', 
+                cursor: 'pointer', 
+                minWidth: 'fit-content',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}>{site.name.toUpperCase()}</button>
+          ))}
           <button 
             data-tab="add"
             onClick={() => scrollToActiveTab('add')} 
@@ -941,13 +913,9 @@ function App() {
                 onFocus={(e) => e.target.style.borderColor = '#667eea'}
                 onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
               >
-                <option value="office">🏢 Office</option>
-                <option value="ci">🔧 C/I</option>
-                <option value="gate">🚪 GATE</option>
-                <option value="ctx">⚡ CTX</option>
-                <option value="check-room">✅ CHECK-ROOM</option>
-                <option value="celler">🏠 CELLER</option>
-                <option value="innsbruck">🏔️ Innsbruck</option>
+                {sites.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
               </select>
             </div>
 
@@ -1131,1236 +1099,185 @@ function App() {
           </div>
         </div>
       )}
-      {/* Office Column */}
-      {(!isMobile || activeTab === 'office') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '1', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          transition: isMobile ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease' : 'none',
-          transform: isMobile && activeTab === 'office' ? 'translateX(0)' : 'translateX(0)',
-          opacity: isMobile && activeTab === 'office' ? 1 : 1
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>Office</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsOffice.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsOffice]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                // First priority: Low stock items (refill type with amount < item's lowStockThreshold)
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                
-                // Second priority: Supplies (refill) before Equipment (stable)
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'office' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <input 
-                          type="text" 
-                          value={editName} 
-                          onChange={e => setEditName(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <input 
-                          type="number" 
-                          value={editAmount} 
-                          onChange={e => setEditAmount(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <select 
-                          value={editType} 
-                          onChange={e => setEditType(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        >
-                          <option value="refill">Supplies</option>
-                          <option value="stable">Equipment</option>
-                        </select>
-                        <input 
-                          type="number" 
-                          value={editLowStockThreshold} 
-                          onChange={e => setEditLowStockThreshold(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                          placeholder="Low stock threshold"
-                        />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <span style={{ fontSize: '1rem', color: '#64748b' }}>Type:</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: editType === 'stable' ? '#2563eb' : '#059669' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
-                            </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'office')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'office')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {/* Innsbruck Column */}
-      {(!isMobile || activeTab === 'innsbruck') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '7', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>Innsbruck</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsInnsbruck.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsInnsbruck]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                // First priority: Low stock items (refill type with amount < item's lowStockThreshold)
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                
-                // Second priority: Supplies (refill) before Equipment (stable)
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'innsbruck' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {/* Name input - full width */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Name:</label>
-                          <input
-                            type="text"
-                            value={editName}
-                            onChange={e => setEditName(e.target.value)}
-                            style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
-                          />
-                        </div>
-                        
-                        {/* Amount and Low Stock threshold inputs */}
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Amount:</label>
-                            <input
-                              type="number"
-                              value={editAmount}
-                              onChange={e => setEditAmount(e.target.value)}
-                              style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
+      {/* Dynamic Columns */}
+      {sites.map(siteData => {
+        const siteItems = getItemsForSite(siteData.id);
+        return (
+          (!isMobile || activeTab === siteData.id) && (
+            <div key={siteData.id} className="column-container" style={{ 
+              gridColumn: isMobile ? '1' : 'auto', 
+              flex: isMobile ? 'none' : 'unset', 
+              background: '#fff', 
+              borderRadius: '1rem', 
+              boxShadow: '0 2px 8px #e0e7ef', 
+              padding: '1.5rem', 
+              minWidth: isMobile ? '0' : '250px', 
+              height: isMobile ? 'auto' : '100%', 
+              overflowY: 'auto', 
+              marginTop: isMobile ? '2rem' : '0',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', color: '#2563eb', textAlign: 'center', margin: 0, flex: 1 }}>{siteData.name}</h2>
+                  <button onClick={() => handleDeleteSite(siteData.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', opacity: 0.5 }} title="Delete Column">🗑️</button>
+              </div>
+              <ul className="item-list" style={{ 
+                listStyle: 'none', 
+                padding: 0, 
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                {siteItems.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
+                {[...siteItems]
+                  .map((item, originalIdx) => ({ item, originalIdx })) // originalIdx is index in filtered array
+                  .sort((a, b) => {
+                    const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
+                    const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
+                    
+                    if (aIsLowStock && !bIsLowStock) return -1;
+                    if (!aIsLowStock && bIsLowStock) return 1;
+                    
+                    return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
+                  })
+                  .map(({ item, originalIdx }) => (
+                    <li key={item.id} style={{
+                      background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
+                      borderRadius: '0.8rem',
+                      boxShadow: '0 2px 6px #e0e7ef',
+                      padding: '0.9rem',
+                      width: isMobile ? '90%' : '260px',
+                      maxWidth: '280px',
+                      border: '2px solid',
+                      borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
+                      position: 'relative',
+                      marginBottom: '1.5rem'
+                    }}>
+                      {editIndex === originalIdx && editSite === siteData.id ? (
+                        <React.Fragment>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <input 
+                              type="text" 
+                              value={editName} 
+                              onChange={e => setEditName(e.target.value)} 
+                              style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
                             />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Low Stock:</label>
-                            <input
-                              type="number"
-                              value={editLowStockThreshold}
-                              onChange={e => setEditLowStockThreshold(e.target.value)}
-                              style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
+                            <input 
+                              type="number" 
+                              value={editAmount} 
+                              onChange={e => setEditAmount(e.target.value)} 
+                              style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
                             />
-                          </div>
-                        </div>
-                        
-                        {/* Type input */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Type:</label>
-                          <select value={editType} onChange={e => setEditType(e.target.value)} style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}>
-                            <option value="refill">Supplies</option>
-                            <option value="stable">Equipment</option>
-                          </select>
-                        </div>
-                        
-                        {/* Status and buttons */}
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                            <span style={{ fontSize: '1rem', color: editType === 'refill' ? (editAmount < editLowStockThreshold ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
-                            </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'innsbruck')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'innsbruck')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {/* C/I Column */}
-      {(!isMobile || activeTab === 'ci') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '2', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>C/I</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsCI.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsCI]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'ci' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <input 
-                          type="text" 
-                          value={editName} 
-                          onChange={e => setEditName(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <input 
-                          type="number" 
-                          value={editAmount} 
-                          onChange={e => setEditAmount(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <select 
-                          value={editType} 
-                          onChange={e => setEditType(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        >
-                          <option value="refill">Supplies</option>
-                          <option value="stable">Equipment</option>
-                        </select>
-                        <input 
-                          type="number" 
-                          value={editLowStockThreshold} 
-                          onChange={e => setEditLowStockThreshold(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                          placeholder="Low stock threshold"
-                        />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <span style={{ fontSize: '1rem', color: '#64748b' }}>Type:</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: editType === 'stable' ? '#2563eb' : '#059669' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
-                            </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'ci')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'ci')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {/* GATE Column */}
-      {(!isMobile || activeTab === 'gate') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '3', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>GATE</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsGate.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsGate]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'gate' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <input 
-                          type="text" 
-                          value={editName} 
-                          onChange={e => setEditName(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <input 
-                          type="number" 
-                          value={editAmount} 
-                          onChange={e => setEditAmount(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <select 
-                          value={editType} 
-                          onChange={e => setEditType(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        >
-                          <option value="refill">Supplies</option>
-                          <option value="stable">Equipment</option>
-                        </select>
-                        <input 
-                          type="number" 
-                          value={editLowStockThreshold} 
-                          onChange={e => setEditLowStockThreshold(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                          placeholder="Low stock threshold"
-                        />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <span style={{ fontSize: '1rem', color: '#64748b' }}>Type:</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: editType === 'stable' ? '#2563eb' : '#059669' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
-                            </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'gate')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'gate')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {/* CTX Column */}
-      {(!isMobile || activeTab === 'ctx') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '4', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>CTX</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsCTX.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsCTX]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'ctx' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Name:</label>
-                          <input
-                            type="text"
-                            value={editName}
-                            onChange={e => setEditName(e.target.value)}
-                            style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Amount:</label>
-                            <input
-                              type="number"
-                              value={editAmount}
-                              onChange={e => setEditAmount(e.target.value)}
-                              style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
+                            <select 
+                              value={editType} 
+                              onChange={e => setEditType(e.target.value)} 
+                              style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
+                            >
+                              <option value="refill">Supplies</option>
+                              <option value="stable">Equipment</option>
+                            </select>
+                            <input 
+                              type="number" 
+                              value={editLowStockThreshold} 
+                              onChange={e => setEditLowStockThreshold(e.target.value)} 
+                              style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
+                              placeholder="Low stock threshold"
                             />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <span style={{ fontSize: '1rem', color: '#64748b' }}>Type:</span>
+                                <span style={{ fontSize: '1rem', fontWeight: 'bold', color: editType === 'stable' ? '#2563eb' : '#059669' }}>
+                                  {editType === 'refill' ? 'Supplies' : 'Equipment'}
+                                </span>
+                                {editType === 'refill' && editAmount < editLowStockThreshold && (
+                                  <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
+                                )}
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
+                                <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
+                                <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
+                              </div>
+                            </div>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Low Stock:</label>
-                            <input
-                              type="number"
-                              value={editLowStockThreshold}
-                              onChange={e => setEditLowStockThreshold(e.target.value)}
-                              style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
-                            />
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Type:</label>
-                          <select value={editType} onChange={e => setEditType(e.target.value)} style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}>
-                            <option value="refill">Supplies</option>
-                            <option value="stable">Equipment</option>
-                          </select>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                            <span style={{ fontSize: '1rem', color: editType === 'refill' ? (editAmount < editLowStockThreshold ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
+                        </React.Fragment>
+                      ) : (
+                        <div>
+                          <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+                            <span
+                              style={{
+                                fontWeight: 'bold',
+                                fontSize: getNameFontSize(item.name),
+                                color: '#1e293b',
+                                textAlign: isHebrew(item.name) ? 'right' : 'left',
+                                direction: isHebrew(item.name) ? 'rtl' : 'ltr',
+                                wordBreak: 'break-word',
+                                hyphens: 'auto',
+                                lineHeight: '1.2',
+                                flex: '1'
+                              }}
+                            >
+                              {item.name}
                             </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'ctx')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'ctx')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {/* CELLER Column */}
-      {(!isMobile || activeTab === 'celler') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '6', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>CELLER</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsCeller.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsCeller]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'celler' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Name:</label>
-                          <input
-                            type="text"
-                            value={editName}
-                            onChange={e => setEditName(e.target.value)}
-                            style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Amount:</label>
-                            <input
-                              type="number"
-                              value={editAmount}
-                              onChange={e => setEditAmount(e.target.value)}
-                              style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
-                            />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Low Stock:</label>
-                            <input
-                              type="number"
-                              value={editLowStockThreshold}
-                              onChange={e => setEditLowStockThreshold(e.target.value)}
-                              style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
-                            />
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <label style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'bold' }}>Type:</label>
-                          <select value={editType} onChange={e => setEditType(e.target.value)} style={{ fontSize: '1.1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}>
-                            <option value="refill">Supplies</option>
-                            <option value="stable">Equipment</option>
-                          </select>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                            <span style={{ fontSize: '1rem', color: editType === 'refill' ? (editAmount < editLowStockThreshold ? '#ef4444' : '#22c55e') : '#2563eb', fontWeight: 'bold' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
+                            <span style={{ 
+                              fontSize: '1.3rem', 
+                              fontWeight: 'bold',
+                              color: '#0f172a',
+                              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                              padding: '0.3rem 0.6rem',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #cbd5e1',
+                              minWidth: '50px',
+                              textAlign: 'center'
+                            }}>
+                              {item.amount}
                             </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
+                            <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
+                              <button onClick={() => handleEdit(originalIdx, siteData.id)} style={{
+                                ...getButtonStyle('#f59e0b'),
+                                fontSize: '0.85rem',
+                                padding: '0.4rem 0.7rem'
+                              }}>Edit</button>
+                              <button onClick={() => confirmDelete(originalIdx, siteData.id)} style={{
+                                ...getButtonStyle('#ef4444'),
+                                fontSize: '0.85rem',
+                                padding: '0.4rem 0.7rem'
+                              }}>Delete</button>
+                            </div>
                           </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'celler')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'celler')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Check-Room Column */}
-      {(!isMobile || activeTab === 'check-room') && (
-        <div className="column-container" style={{ 
-          gridColumn: isMobile ? '1' : '5', 
-          flex: isMobile ? 'none' : 'unset', 
-          background: '#fff', 
-          borderRadius: '1rem', 
-          boxShadow: '0 2px 8px #e0e7ef', 
-          padding: '1.5rem', 
-          minWidth: isMobile ? '0' : '250px', 
-          height: isMobile ? 'auto' : '100%', 
-          overflowY: 'auto', 
-          marginTop: isMobile ? '2rem' : '0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', color: '#2563eb', textAlign: 'center' }}>Check-Room</h2>
-          <ul className="item-list" style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            {itemsCheckRoom.length === 0 && <p style={{ color: '#64748b' }}>No items yet.</p>}
-            {[...itemsCheckRoom]
-              .map((item, originalIdx) => ({ item, originalIdx }))
-              .sort((a, b) => {
-                // First priority: Low stock items (refill type with amount < item's lowStockThreshold)
-                const aIsLowStock = a.item.type === 'refill' && a.item.amount < (a.item.lowStockThreshold || LOW_STOCK);
-                const bIsLowStock = b.item.type === 'refill' && b.item.amount < (b.item.lowStockThreshold || LOW_STOCK);
-                
-                if (aIsLowStock && !bIsLowStock) return -1;
-                if (!aIsLowStock && bIsLowStock) return 1;
-                
-                // Second priority: Supplies (refill) before Equipment (stable)
-                return (a.item.type === 'refill' ? -1 : 1) - (b.item.type === 'refill' ? -1 : 1);
-              })
-              .map(({ item, originalIdx }) => (
-                <li key={originalIdx} style={{
-                  background: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fef2f2' : (item.type === 'stable' ? '#eff6ff' : '#f0fdf4'),
-                  borderRadius: '0.8rem',
-                  boxShadow: '0 2px 6px #e0e7ef',
-                  padding: '0.9rem',
-                  width: isMobile ? '90%' : '260px',
-                  maxWidth: '280px',
-                  border: '2px solid',
-                  borderColor: item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) ? '#fca5a5' : (item.type === 'stable' ? '#93c5fd' : '#a7f3d0'),
-                  position: 'relative',
-                  marginBottom: '1.5rem'
-                }}>
-                  {editIndex === originalIdx && editSite === 'check-room' ? (
-                    <React.Fragment>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <input 
-                          type="text" 
-                          value={editName} 
-                          onChange={e => setEditName(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <input 
-                          type="number" 
-                          value={editAmount} 
-                          onChange={e => setEditAmount(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        />
-                        <select 
-                          value={editType} 
-                          onChange={e => setEditType(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                        >
-                          <option value="refill">Supplies</option>
-                          <option value="stable">Equipment</option>
-                        </select>
-                        <input 
-                          type="number" 
-                          value={editLowStockThreshold} 
-                          onChange={e => setEditLowStockThreshold(e.target.value)} 
-                          style={{ fontSize: '1.1rem', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                          placeholder="Low stock threshold"
-                        />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <span style={{ fontSize: '1rem', color: '#64748b' }}>Type:</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: editType === 'stable' ? '#2563eb' : '#059669' }}>
-                              {editType === 'refill' ? 'Supplies' : 'Equipment'}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ 
+                                fontSize: '0.9rem', 
+                                color: item.type === 'stable' ? '#2563eb' : '#059669', 
+                                fontWeight: 'bold',
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '0.4rem',
+                                background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
+                                border: '1px solid',
+                                borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
+                              }}>
+                                {item.type === 'refill' ? 'Supplies' : 'Equipment'}
+                              </span>
+                              {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
+                                <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                              Low: &lt; {item.lowStockThreshold || LOW_STOCK}
                             </span>
-                            {editType === 'refill' && editAmount < editLowStockThreshold && (
-                              <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>⚠️ Low stock!</span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-                            <button onClick={handleSave} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Save</button>
-                            <button onClick={() => setEditIndex(null)} style={{ fontSize: '1rem', padding: '0.6rem 1rem', borderRadius: '0.5rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', flex: isMobile ? '1' : 'none' }}>Cancel</button>
                           </div>
                         </div>
-                      </div>
-                    </React.Fragment>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: getNameFontSize(item.name),
-                            color: '#1e293b',
-                            textAlign: isHebrew(item.name) ? 'right' : 'left',
-                            direction: isHebrew(item.name) ? 'rtl' : 'ltr',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            lineHeight: '1.2',
-                            flex: '1'
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span style={{ 
-                          fontSize: '1.3rem', 
-                          fontWeight: 'bold',
-                          color: '#0f172a',
-                          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                          padding: '0.3rem 0.6rem',
-                          borderRadius: '0.5rem',
-                          border: '1px solid #cbd5e1',
-                          minWidth: '50px',
-                          textAlign: 'center'
-                        }}>
-                          {item.amount}
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem', alignItems: 'center' }}>
-                          <button onClick={() => handleEdit(originalIdx, 'check-room')} style={{
-                            ...getButtonStyle('#f59e0b'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Edit</button>
-                          <button onClick={() => confirmDelete(originalIdx, 'check-room')} style={{
-                            ...getButtonStyle('#ef4444'),
-                            fontSize: '0.85rem',
-                            padding: '0.4rem 0.7rem'
-                          }}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            color: item.type === 'stable' ? '#2563eb' : '#059669', 
-                            fontWeight: 'bold',
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '0.4rem',
-                            background: item.type === 'stable' ? '#eff6ff' : '#f0fdf4',
-                            border: '1px solid',
-                            borderColor: item.type === 'stable' ? '#93c5fd' : '#a7f3d0'
-                          }}>
-                            {item.type === 'refill' ? 'Supplies' : 'Equipment'}
-                          </span>
-                          {item.type === 'refill' && item.amount < (item.lowStockThreshold || LOW_STOCK) && (
-                            <span className="alert" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>⚠️ Low stock!</span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                          Low: &lt; {item.lowStockThreshold || LOW_STOCK}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
+                      )}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )
+        );
+      })}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -2547,6 +1464,95 @@ function App() {
                 }}
               >
                 Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Site Modal */}
+      {showAddSite && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+          }}>
+            <h3 style={{ 
+              margin: '0 0 1.5rem 0', 
+              fontSize: '1.5rem', 
+              color: '#2d3748',
+              textAlign: 'center'
+            }}>
+              Add New Column
+            </h3>
+            <input
+              type="text"
+              value={newSiteName}
+              onChange={(e) => setNewSiteName(e.target.value)}
+              placeholder="Column Name"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '2px solid #e2e8f0',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                marginBottom: '1.5rem',
+                boxSizing: 'border-box'
+              }}
+              autoFocus
+            />
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowAddSite(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '0.5rem',
+                  backgroundColor: '#fff',
+                  color: '#4a5568',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleAddSite();
+                  setShowAddSite(false);
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  backgroundColor: '#2563eb',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Add
               </button>
             </div>
           </div>
