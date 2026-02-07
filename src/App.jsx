@@ -595,14 +595,14 @@ function App() {
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Roboto", "Helvetica Neue", sans-serif;
         }
         
-        /* EliExpress branding animations */
+        /* STARD branding animations */
         @keyframes logoGlow {
           0% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
           50% { text-shadow: 2px 2px 8px rgba(255,255,255,0.5), 0 0 20px rgba(255,101,0,0.5); }
           100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         }
         
-        .eli-logo {
+        .stard-logo {
           animation: logoGlow 3s ease-in-out infinite;
         }
         
@@ -683,7 +683,7 @@ function App() {
       onTouchEnd={isMobile ? onTouchEnd : undefined}
       >
       
-      {/* EliExpress Header */}
+      {/* STARD Header */}
       <div style={{
         gridColumn: isMobile ? '1' : '1 / -1',
         background: 'linear-gradient(135deg, #ff6500, #ff8533)',
@@ -705,7 +705,7 @@ function App() {
           right: 0,
           width: isMobile ? '80px' : '120px',
           height: isMobile ? '80px' : '120px',
-          backgroundImage: 'url(/eli-photo.jpg)',
+          backgroundImage: 'url(/stard-logo.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           opacity: 0.6,
@@ -715,14 +715,14 @@ function App() {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 1 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className="eli-logo" style={{
+            <div className="stard-logo" style={{
               fontSize: isMobile ? '1.5rem' : '2rem',
               fontWeight: '900',
               letterSpacing: '-0.02em',
               textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
               lineHeight: '1.1'
             }}>
-              🚀 EliExpress
+              ⭐ STARD
             </div>
             <div style={{
               fontSize: isMobile ? '0.75rem' : '0.9rem',
